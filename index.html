@@ -643,7 +643,7 @@
 
             // Logica di STOP e Prossimo step
             let nextStep = currentStep + 1;
-            let nextBetAmount = puntataSingola;
+            // nextBetAmount non è più puntataSingola, verrà aggiornato in base agli hits
 
             // Il gioco FINISCE (si ferma la progressione) se il Saldo è positivo
             if (sessionData.saldoRealTime > 0) {
@@ -651,12 +651,13 @@
                 return; // Ferma ogni altra logica
             }
 
+            // LOGICA MODIFICATA:
             if (hits === 0) {
-                // Sconfitta: incrementa la singola puntata su ciascun fattore
+                // Sconfitta: incrementa la singola puntata su ciascun fattore di una fiche
                 nextBetAmount = bet.colorBet + puntataSingola;
             } else {
-                // Vittoria: torna alla puntata base (1 fiche)
-                nextBetAmount = puntataSingola;
+                // Vittoria (almeno un hit): la puntata per il prossimo step rimane invariata.
+                nextBetAmount = bet.colorBet; // Mantieni l'importo della puntata precedente
             }
 
             // Prepara il prossimo step solo se siamo in perdita (sessionData.saldoRealTime < 0)
@@ -877,7 +878,7 @@
             cassaStoricaValue.style.color = totalNet >= 0 ? 'var(--black)' : 'var(--white)';
         }
 
-        // === GESTIONE EVENTI (MODIFICATO PER MOBILE) ===
+        // === GESTIONE EVENTI ===
 
         /** Funzione centrale per processare il numero estratto, richiamata da diversi eventi. */
         function handleNewNumber() {
@@ -924,7 +925,7 @@
             }
         });
 
-        // 2. NUOVO Listener per tastiera mobile (evento 'blur' quando si preme 'Done' o si tocca fuori)
+        // 2. Listener per tastiera mobile (evento 'blur' quando si preme 'Done' o si tocca fuori)
         numeroEstrattoInput.addEventListener('blur', function() {
             // Processa solo se c'è un valore valido nel campo
             if (this.value.trim() !== '') {
