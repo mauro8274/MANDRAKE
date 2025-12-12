@@ -877,40 +877,58 @@
             cassaStoricaValue.style.color = totalNet >= 0 ? 'var(--black)' : 'var(--white)';
         }
 
-        // === GESTIONE EVENTI ===
+        // === GESTIONE EVENTI (MODIFICATO PER MOBILE) ===
 
-        /** Listener per l'inserimento del numero estratto */
-        numeroEstrattoInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Impedisce l'invio del form
-                
-                const num = parseInt(this.value);
-                const puntata = parseFloat(puntataInput.value);
+        /** Funzione centrale per processare il numero estratto, richiamata da diversi eventi. */
+        function handleNewNumber() {
+            const num = parseInt(numeroEstrattoInput.value);
+            const puntata = parseFloat(puntataInput.value);
 
-                if (isNaN(num) || num < 0 || num > 36 || isNaN(puntata) || puntata <= 0) {
+            // Controllo validità dell'input
+            if (isNaN(num) || num < 0 || num > 36 || isNaN(puntata) || puntata <= 0) {
+                // Mostra l'errore solo se l'utente ha provato ad inserire un valore non vuoto
+                if (numeroEstrattoInput.value.trim() !== '') {
                     alert('Inserisci un numero valido (0-36) e una puntata iniziale valida.');
-                    return;
                 }
+                return;
+            }
+            
+            // Logica di processamento
+            sessionData.extractedNumbers.push(num);
+            numeroEstrattoInput.value = ''; // Pulisce il campo
 
-                sessionData.extractedNumbers.push(num);
-                this.value = ''; // Pulisce il campo e mantiene il focus
-
-                if (sessionData.extractedNumbers.length >= ANALYSIS_COUNT) {
-                    updateDataAreaTable(); // Aggiorna i 9 numeri
-                    
-                    // Dopo il 9° numero (o se è la prima giocata dopo il 9°)
-                    if (sessionData.currentStep === 0) {
-                        calculateBetFactors();
-                        setupNextStep(1, puntata); // Inizia il primo step con puntata iniziale
-                        notifyBetFactors(); // MOSTRA IL POP-UP
-                    } else {
-                        // Dal 10° numero in poi (o step successivi)
-                        processExtraction(num);
-                        calculateBetFactors(); // Ricalcola i fattori per il prossimo giro
-                    }
+            if (sessionData.extractedNumbers.length >= ANALYSIS_COUNT) {
+                updateDataAreaTable(); // Aggiorna i 9 numeri
+                
+                // Dopo il 9° numero (o se è la prima giocata dopo il 9°)
+                if (sessionData.currentStep === 0) {
+                    calculateBetFactors();
+                    setupNextStep(1, puntata); // Inizia il primo step con puntata iniziale
+                    notifyBetFactors(); // MOSTRA IL POP-UP
                 } else {
-                    updateDataAreaTable();
+                    // Dal 10° numero in poi (o step successivi)
+                    processExtraction(num);
+                    calculateBetFactors(); // Ricalcola i fattori per il prossimo giro
                 }
+            } else {
+                updateDataAreaTable();
+            }
+        }
+
+        // 1. Listener per tastiera desktop (tasto Invio)
+        numeroEstrattoInput.addEventListener('keydown', function(event) {
+            // Controlla per 'Enter' o keyCode 13 (per maggiore compatibilità)
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                event.preventDefault(); // Impedisce l'invio del form
+                handleNewNumber();
+            }
+        });
+
+        // 2. NUOVO Listener per tastiera mobile (evento 'blur' quando si preme 'Done' o si tocca fuori)
+        numeroEstrattoInput.addEventListener('blur', function() {
+            // Processa solo se c'è un valore valido nel campo
+            if (this.value.trim() !== '') {
+                handleNewNumber();
             }
         });
 
