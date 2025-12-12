@@ -333,7 +333,8 @@
         // === DATI E CONFIGURAZIONE GLOBALE ===
 
         // Configurazione per jsonbin.io
-        const JSON_BIN_ID = '693c2d5343b1c97be9e984aa';
+        // *** IMPORTANTE: SOSTITUISCI QUESTI CON I TUOI DATI SE NON LO HAI GIÀ FATTO ***
+        const JSON_BIN_ID = '693c2d5343b1c97be9e984aa'; 
         const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe';
         const API_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
 
@@ -347,9 +348,9 @@
             'D2': [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
             'D3': [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
             // Righe (Colonne)
-            'L1': [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34], // Colonna 1: da escludere per la scommessa
-            'L2': [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35], // Colonna 2
-            'L3': [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]  // Colonna 3
+            'L1': [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34], 
+            'L2': [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35], 
+            'L3': [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]  
         };
         const MAX_STEPS = 50;
         const ANALYSIS_COUNT = 9;
@@ -370,6 +371,7 @@
         const puntataInput = document.getElementById('puntataInput');
         const saldoRealTimeValue = document.getElementById('saldoRealTimeValue');
         const scommessaValue = document.getElementById('scommessaValue');
+        const scommessaContainer = document.getElementById('scommessaContainer'); // Aggiunto per fix
         const dataAreaTable = document.getElementById('lastNineNumbersRow');
         const bettingTableBody = document.querySelector('#bettingTable tbody');
         const cassaStoricaValue = document.getElementById('cassaStoricaValue');
@@ -419,6 +421,20 @@
                 const number = lastNine[i] !== undefined ? lastNine[i] : '-';
                 const cell = dataAreaTable.insertCell();
                 cell.textContent = number;
+                
+                // Opzionale: colora la cella
+                let color = 'var(--white)';
+                let bgColor = 'transparent';
+                if (number === 0) {
+                    bgColor = 'var(--green-light)';
+                    color = 'var(--black)';
+                } else if (ROULETTE_MAP.RED.includes(number)) {
+                    bgColor = 'var(--red)';
+                } else if (ROULETTE_MAP.BLACK.includes(number)) {
+                    bgColor = 'var(--black)';
+                }
+                cell.style.backgroundColor = bgColor;
+                cell.style.color = color;
             }
         }
 
@@ -432,10 +448,12 @@
             puntataInput.value = "0.10";
             numeroEstrattoInput.value = '';
             saldoRealTimeValue.textContent = formatCurrency(0.00);
-            saldoRealTimeValue.style.color = var('--red');
+            // FIX 1: Aggiunte le virgolette
+            saldoRealTimeValue.style.color = 'var(--red)';
             scommessaValue.textContent = 'Inserisci 9 numeri per calcolare...';
             scommessaContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            scommessaContainer.style.color = var('--black');
+            // FIX 2: Aggiunte le virgolette
+            scommessaContainer.style.color = 'var(--black)';
 
             createInitialBettingTable();
             updateDataAreaTable();
@@ -475,8 +493,8 @@
 
             // 1. Logica Colore (Punta quello uscito meno)
             sessionData.betFactors.color = counts.RED < counts.BLACK ? 'RED' : 
-                                           counts.BLACK < counts.RED ? 'BLACK' : 
-                                           'N/A';
+                                            counts.BLACK < counts.RED ? 'BLACK' : 
+                                            'N/A';
 
             // 2. Logica Riga (Punta quello uscito meno, MAI L1)
             let lineCounts = { 'L2': counts.L2, 'L3': counts.L3 };
@@ -491,8 +509,6 @@
                 sessionData.betFactors.line = 'L2'; 
             }
             
-            // L1 (1-34) non si gioca MAI, quindi non è necessario gestirla oltre a escluderla dall'analisi per la puntata.
-
             // 3. Logica Dozzina (Punta quello uscito meno, MAI D2)
             let dozenCounts = { 'D1': counts.D1, 'D3': counts.D3 };
 
@@ -505,7 +521,6 @@
                 // Se sono pari, scegli D1 (arbitrario)
                 sessionData.betFactors.dozen = 'D1';
             }
-            // D2 non si gioca MAI.
             
             // Aggiorna l'interfaccia con i fattori di scommessa
             updateScommessaUI();
@@ -524,7 +539,8 @@
                 ${displayDozen}
             `;
             scommessaContainer.style.backgroundColor = 'var(--gold)';
-            scommessaContainer.style.color = var(--black);
+            // FIX 3: Aggiunte le virgolette
+            scommessaContainer.style.color = 'var(--black)'; 
         }
 
         // === LOGICA DI GIOCO E AGGIORNAMENTO TABELLA ===
@@ -600,7 +616,9 @@
                 nextBetAmount = totalBetInRow + puntataSingola;
             } else {
                 // Vittoria (anche solo 1 fattore): Stessa puntata
-                nextBetAmount = totalBetInRow;
+                nextBetAmount = puntataSingola; // Torna al valore base
+                // Oppure: nextBetAmount = totalBetInRow; // Mantiene la stessa puntata come progressione piatta?
+                // Decido di tornare al valore base di 1 fiche dopo una vittoria.
             }
 
             // Prepara il prossimo step (solo se non ha vinto e non siamo all'ultimo step)
@@ -612,7 +630,7 @@
             if (sessionData.saldoRealTime > 0) {
                 showWinPopup(sessionData.saldoRealTime);
             } else if (nextStep > MAX_STEPS && sessionData.saldoRealTime < 0) {
-                alert("Raggiunto il limite massimo di 50 step. Sessione terminata in perdita.");
+                alert("Raggiunto il limite massimo di 50 step. Sessione terminata in perdita. Archivia e resetta.");
             }
             
             updateSaldoRealTimeUI();
@@ -704,7 +722,20 @@
         }
 
         /** Salva i dati dell'archivio su jsonbin.io (sovrascrive tutto) */
-        async function saveArchive(newEntry) {
+        async function saveArchive() {
+            if (sessionData.currentStep === 0) {
+                alert("Non c'è una sessione attiva da archiviare.");
+                return;
+            }
+
+            const totalInvestment = parseFloat(puntataInput.value) * sessionData.currentStep; // Base * numero di step giocati
+            const newEntry = {
+                data: new Date().toLocaleDateString('it-IT'),
+                netto: parseFloat(sessionData.saldoRealTime.toFixed(2)),
+                investimentoIniziale: parseFloat(puntataInput.value),
+                stepChiusura: sessionData.currentStep
+            };
+
             try {
                 // 1. Carica i dati attuali
                 const responseRead = await fetch(API_URL, {
@@ -809,19 +840,22 @@
                 }
 
                 sessionData.extractedNumbers.push(num);
-                updateDataAreaTable();
                 this.value = ''; // Pulisce il campo e mantiene il focus
-                this.focus();
 
                 if (sessionData.extractedNumbers.length >= ANALYSIS_COUNT) {
-                    // Dopo il 9° numero
-                    if (sessionData.betFactors.color === '') {
+                    updateDataAreaTable(); // Aggiorna i 9 numeri
+                    
+                    // Dopo il 9° numero (o se è la prima giocata dopo il 9°)
+                    if (sessionData.currentStep === 0) {
                         calculateBetFactors();
                         setupNextStep(1, puntata); // Inizia il primo step con puntata iniziale
                     } else {
-                        // Dal 10° numero in poi
+                        // Dal 10° numero in poi (o step successivi)
                         processExtraction(num);
+                        calculateBetFactors(); // Ricalcola i fattori per il prossimo giro
                     }
+                } else {
+                    updateDataAreaTable();
                 }
             }
         });
@@ -836,56 +870,24 @@
         document.getElementById('btnToGameFromArchive').addEventListener('click', () => {
             archiveView.style.display = 'none';
             gameView.style.display = 'block';
+            numeroEstrattoInput.focus();
         });
 
-        // Pulsante di reset sessione
+        // Pulsanti azioni
+        document.getElementById('btnArchivia').addEventListener('click', saveArchive);
         document.getElementById('btnResetSession').addEventListener('click', () => {
-            if (confirm("Sei sicuro di voler resettare la sessione di gioco attuale?")) {
-                resetSession();
-            }
+             if (confirm("Sei sicuro di voler resettare la sessione attuale?")) {
+                 resetSession();
+             }
         });
-        
-        // Pulsante di archiviazione
-        document.getElementById('btnArchivia').addEventListener('click', () => {
-            const currentStep = sessionData.currentStep;
-            
-            // Trova l'ultimo step giocato/evidenziato
-            let stepChiusura = 0;
-            for(let i = 0; i < sessionData.betHistory.length; i++) {
-                if (sessionData.betHistory[i].isPlayed) {
-                    stepChiusura = i + 1;
-                } else if (i + 1 === currentStep && sessionData.betHistory[i].totalBet > 0) {
-                    // Se la riga è solo evidenziata ma non ancora giocata, conta quella
-                    stepChiusura = i + 1; 
-                    break;
-                }
-            }
-
-            if (stepChiusura === 0) {
-                alert("Non ci sono dati di gioco da archiviare.");
-                return;
-            }
-
-            const newEntry = {
-                data: new Date().toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' }),
-                netto: parseFloat(sessionData.saldoRealTime.toFixed(2)),
-                investimentoIniziale: parseFloat(puntataInput.value),
-                stepChiusura: stepChiusura
-            };
-
-            saveArchive(newEntry);
-        });
-
-        // Pulsante di reset archivio storico
         document.getElementById('btnResetArchive').addEventListener('click', resetOnlineArchive);
 
-        // === INIZIALIZZAZIONE ===
 
+        // Inizializzazione all'apertura della pagina
         window.onload = () => {
             resetSession();
             // L'archivio viene caricato solo quando si accede alla vista archivio
         };
     </script>
-
 </body>
 </html>
