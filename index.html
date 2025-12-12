@@ -137,6 +137,7 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            margin-bottom: 20px; 
             flex-wrap: wrap; /* Per smartphone */
         }
 
@@ -254,6 +255,11 @@
             <span id="saldoRealTimeValue">0.00€</span>
         </div>
         
+        <div class="button-group">
+            <button id="btnArchivia">Archivia Sessione</button>
+            <button id="btnResetSession">Reset Sessione</button>
+            <button id="btnToArchive">Archivio</button>
+        </div>
         <div class="info-box">
             <h3>AREA DATI - Ultimi Numeri Estratti</h3>
             <table id="dataAreaTable">
@@ -287,12 +293,6 @@
                 <tbody>
                     </tbody>
             </table>
-        </div>
-
-        <div class="button-group">
-            <button id="btnArchivia">Archivia Sessione</button>
-            <button id="btnResetSession">Reset Sessione</button>
-            <button id="btnToArchive">Archivio</button>
         </div>
     </div>
 
@@ -333,9 +333,10 @@
         // === DATI E CONFIGURAZIONE GLOBALE ===
 
         // Configurazione per jsonbin.io
-        // *** IMPORTANTE: SOSTITUISCI QUESTI CON I TUOI DATI SE NON LO HAI GIÀ FATTO ***
+        // *** IMPORTANTE: SOSTITUISCI IL SEGUENTE API_KEY CON LA TUA CHIAVE REALE DA JSONBIN.IO ***
         const JSON_BIN_ID = '693c2d5343b1c97be9e984aa'; 
-        const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe';
+        // L'utente deve sostituire la chiave qui sotto. La lascio come placeholder per sicurezza.
+        const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; 
         const API_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
 
         // Mappatura Roulette
@@ -354,6 +355,7 @@
         };
         const MAX_STEPS = 50;
         const ANALYSIS_COUNT = 9;
+        const API_KEY_PLACEHOLDER = 'SOSTITUISCI_CON_IL_TUO_BACKEND_O_PROXY'; // Usiamo una costante per il controllo
 
         // Stato di sessione
         let sessionData = {
@@ -371,7 +373,7 @@
         const puntataInput = document.getElementById('puntataInput');
         const saldoRealTimeValue = document.getElementById('saldoRealTimeValue');
         const scommessaValue = document.getElementById('scommessaValue');
-        const scommessaContainer = document.getElementById('scommessaContainer'); // Aggiunto per fix
+        const scommessaContainer = document.getElementById('scommessaContainer');
         const dataAreaTable = document.getElementById('lastNineNumbersRow');
         const bettingTableBody = document.querySelector('#bettingTable tbody');
         const cassaStoricaValue = document.getElementById('cassaStoricaValue');
@@ -382,6 +384,17 @@
         /** Formatta un numero come valuta */
         function formatCurrency(amount) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
+
+        /** Parsea date italiane "gg/mm/aaaa" in oggetto Date (robusto) */
+        function parseItalianDate(ddmmyyyy) {
+            if (!ddmmyyyy) return new Date(NaN);
+            const parts = ddmmyyyy.split('/');
+            if (parts.length !== 3) return new Date(ddmmyyyy); // fallback
+            const d = parseInt(parts[0], 10);
+            const m = parseInt(parts[1], 10) - 1;
+            const y = parseInt(parts[2], 10);
+            return new Date(y, m, d);
         }
 
         /** Funzione per creare le righe iniziali della tabella scommesse */
@@ -422,19 +435,27 @@
                 const cell = dataAreaTable.insertCell();
                 cell.textContent = number;
                 
-                // Opzionale: colora la cella
-                let color = 'var(--white)';
+                // Colora la cella con contrasto leggibile
                 let bgColor = 'transparent';
-                if (number === 0) {
+                let textColor = 'var(--white)';
+                if (number === '-') {
+                    bgColor = 'transparent';
+                    textColor = 'var(--white)';
+                } else if (number === 0) {
                     bgColor = 'var(--green-light)';
-                    color = 'var(--black)';
+                    textColor = 'var(--black)';
                 } else if (ROULETTE_MAP.RED.includes(number)) {
                     bgColor = 'var(--red)';
+                    textColor = 'var(--white)';
                 } else if (ROULETTE_MAP.BLACK.includes(number)) {
                     bgColor = 'var(--black)';
+                    textColor = 'var(--white)';
+                } else {
+                    bgColor = 'transparent';
+                    textColor = 'var(--white)';
                 }
                 cell.style.backgroundColor = bgColor;
-                cell.style.color = color;
+                cell.style.color = textColor;
             }
         }
 
@@ -448,11 +469,9 @@
             puntataInput.value = "0.10";
             numeroEstrattoInput.value = '';
             saldoRealTimeValue.textContent = formatCurrency(0.00);
-            // FIX 1: Aggiunte le virgolette
             saldoRealTimeValue.style.color = 'var(--red)';
             scommessaValue.textContent = 'Inserisci 9 numeri per calcolare...';
             scommessaContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            // FIX 2: Aggiunte le virgolette
             scommessaContainer.style.color = 'var(--black)';
 
             createInitialBettingTable();
@@ -498,32 +517,47 @@
 
             // 2. Logica Riga (Punta quello uscito meno, MAI L1)
             let lineCounts = { 'L2': counts.L2, 'L3': counts.L3 };
-            
-            // Trova il minimo tra L2 e L3
             if (lineCounts.L2 < lineCounts.L3) {
                 sessionData.betFactors.line = 'L2';
             } else if (lineCounts.L3 < lineCounts.L2) {
                 sessionData.betFactors.line = 'L3';
             } else {
-                // Se sono pari, scegli L2 (arbitrario)
                 sessionData.betFactors.line = 'L2'; 
             }
             
             // 3. Logica Dozzina (Punta quello uscito meno, MAI D2)
             let dozenCounts = { 'D1': counts.D1, 'D3': counts.D3 };
-
-            // Trova il minimo tra D1 e D3
             if (dozenCounts.D1 < dozenCounts.D3) {
                 sessionData.betFactors.dozen = 'D1';
             } else if (dozenCounts.D3 < dozenCounts.D1) {
                 sessionData.betFactors.dozen = 'D3';
             } else {
-                // Se sono pari, scegli D1 (arbitrario)
                 sessionData.betFactors.dozen = 'D1';
             }
             
             // Aggiorna l'interfaccia con i fattori di scommessa
             updateScommessaUI();
+        }
+        
+        /** Mostra un pop-up di notifica con i fattori di scommessa */
+        function notifyBetFactors() {
+            const factors = sessionData.betFactors;
+            const puntata = parseFloat(puntataInput.value) || 0.10;
+            const betAmount = sessionData.betHistory[sessionData.currentStep].colorBet || puntata; // Usa l'importo calcolato per lo step 1
+            
+            let displayColor = factors.color === 'RED' ? 'ROSSO' : factors.color === 'BLACK' ? 'NERO' : 'Non definito';
+            let displayLine = factors.line === 'L2' ? 'LINEA 2 (2-35)' : factors.line === 'L3' ? 'LINEA 3 (3-36)' : 'Non definito';
+            let displayDozen = factors.dozen === 'D1' ? 'DOZZINA 1 (1-12)' : factors.dozen === 'D3' ? 'DOZZINA 3 (25-36)' : 'Non definito';
+
+            let message = `🔔 INIZIO STRATEGIA 🔔\n\n`;
+            message += `Puntata per fattore: ${formatCurrency(puntata)}\n`;
+            message += `Totale Puntata Step 1: ${formatCurrency(puntata * 3)}\n\n`;
+            message += `Fattore COLORE: ${displayColor}\n`;
+            message += `Fattore LINEA: ${displayLine}\n`;
+            message += `Fattore DOZZINA: ${displayDozen}\n\n`;
+            message += `Inserisci il prossimo numero estratto per procedere.`;
+            
+            alert(message);
         }
 
         /** Aggiorna l'interfaccia con i fattori di scommessa calcolati */
@@ -539,7 +573,6 @@
                 ${displayDozen}
             `;
             scommessaContainer.style.backgroundColor = 'var(--gold)';
-            // FIX 3: Aggiunte le virgolette
             scommessaContainer.style.color = 'var(--black)'; 
         }
 
@@ -552,7 +585,7 @@
             const puntataSingola = parseFloat(puntataInput.value);
 
             if (!bet || !bet.isPlayed) {
-                console.error("Errore: Nessuna puntata attiva da processare.");
+                console.error("Errore: Nessuna puntata attiva da processare. currentStep:", currentStep, "bet:", bet);
                 return;
             }
 
@@ -606,34 +639,35 @@
             sessionData.saldoRealTime = (sessionData.saldoRealTime + nettoEvento);
 
             updateBettingTableUI(currentStep); // Aggiorna la riga corrente
+            updateSaldoRealTimeUI();
 
-            // Logica per il prossimo step
+            // Logica di STOP e Prossimo step
             let nextStep = currentStep + 1;
             let nextBetAmount = puntataSingola;
 
-            if (hits === 0) {
-                // Sconfitta: Incrementa la puntata di una fiche
-                nextBetAmount = totalBetInRow + puntataSingola;
-            } else {
-                // Vittoria (anche solo 1 fattore): Stessa puntata
-                nextBetAmount = puntataSingola; // Torna al valore base
-                // Oppure: nextBetAmount = totalBetInRow; // Mantiene la stessa puntata come progressione piatta?
-                // Decido di tornare al valore base di 1 fiche dopo una vittoria.
+            // Il gioco FINISCE (si ferma la progressione) se il Saldo è positivo
+            if (sessionData.saldoRealTime > 0) {
+                showWinPopup(sessionData.saldoRealTime);
+                return; // Ferma ogni altra logica
             }
 
-            // Prepara il prossimo step (solo se non ha vinto e non siamo all'ultimo step)
-            if (nextStep <= MAX_STEPS && sessionData.saldoRealTime < 0) {
+            if (hits === 0) {
+                // Sconfitta: incrementa la singola puntata su ciascun fattore
+                nextBetAmount = bet.colorBet + puntataSingola;
+            } else {
+                // Vittoria: torna alla puntata base (1 fiche)
+                nextBetAmount = puntataSingola;
+            }
+
+            // Prepara il prossimo step solo se siamo in perdita (sessionData.saldoRealTime < 0)
+            if (nextStep <= MAX_STEPS) {
                 setupNextStep(nextStep, nextBetAmount);
             }
             
-            // Controllo vincita
-            if (sessionData.saldoRealTime > 0) {
-                showWinPopup(sessionData.saldoRealTime);
-            } else if (nextStep > MAX_STEPS && sessionData.saldoRealTime < 0) {
+            // Check max steps
+            if (nextStep > MAX_STEPS && sessionData.saldoRealTime < 0) {
                 alert("Raggiunto il limite massimo di 50 step. Sessione terminata in perdita. Archivia e resetta.");
             }
-            
-            updateSaldoRealTimeUI();
         }
 
         /** Prepara l'interfaccia per la prossima scommessa */
@@ -648,7 +682,7 @@
             nextBet.colorBet = betAmount;
             nextBet.lineBet = betAmount;
             nextBet.dozenBet = betAmount;
-            nextBet.totalBet = betAmount * 3;
+            nextBet.totalBet = parseFloat((betAmount * 3).toFixed(2));
             nextBet.isPlayed = true;
 
             // Aggiorna la UI della nuova riga
@@ -688,13 +722,29 @@
         
         /** Mostra un pop-up di vittoria */
         function showWinPopup(amount) {
-            alert(`🎉 HAI VINTO ${formatCurrency(amount)}!! Archivia la sessione.`);
+            alert(`🎉 HAI VINTO ${formatCurrency(amount)}!! La sessione è conclusa con profitto. Archivia per salvare i dati.`);
         }
 
         // === GESTIONE ARCHIVIO (JSONBIN.IO) ===
+        
+        function checkApiKey() {
+            if (API_KEY === API_KEY_PLACEHOLDER) {
+                alert("ERRORE ARCHIVIO: Devi sostituire 'API_KEY' nel codice JavaScript con la tua chiave jsonbin.io.");
+                console.error("API_KEY non configurata. Le chiamate API falliranno.");
+                return false;
+            }
+            return true;
+        }
+
 
         /** Carica i dati dell'archivio da jsonbin.io */
         async function loadArchive() {
+            if (!checkApiKey()) {
+                renderArchiveTable([]);
+                calculateCassaStorica([]);
+                return;
+            }
+            
             try {
                 const response = await fetch(API_URL, {
                     method: 'GET',
@@ -704,31 +754,32 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
                 }
 
                 const data = await response.json();
-                const archiveData = data.record || []; // Assicurati che sia un array
+                const archiveData = Array.isArray(data.record) ? data.record : [];
                 
                 renderArchiveTable(archiveData);
                 calculateCassaStorica(archiveData);
 
             } catch (error) {
-                console.error("Errore nel caricamento dell'archivio:", error);
-                alert("Errore nel caricamento dell'archivio. Controlla la console.");
-                renderArchiveTable([]); // Visualizza tabella vuota in caso di errore
+                console.error("Errore nel caricamento dell'archivio. Controlla la console:", error);
+                alert("Errore nel caricamento dell'archivio. Controlla la console per i dettagli. (Potrebbe essere l'API Key)");
+                renderArchiveTable([]);
                 calculateCassaStorica([]);
             }
         }
 
         /** Salva i dati dell'archivio su jsonbin.io (sovrascrive tutto) */
         async function saveArchive() {
+            if (!checkApiKey()) return;
+            
             if (sessionData.currentStep === 0) {
                 alert("Non c'è una sessione attiva da archiviare.");
                 return;
             }
 
-            const totalInvestment = parseFloat(puntataInput.value) * sessionData.currentStep; // Base * numero di step giocati
             const newEntry = {
                 data: new Date().toLocaleDateString('it-IT'),
                 netto: parseFloat(sessionData.saldoRealTime.toFixed(2)),
@@ -742,8 +793,9 @@
                     method: 'GET',
                     headers: { 'X-ACCESS-KEY': API_KEY }
                 });
+                if (!responseRead.ok) throw new Error(`HTTP GET error! status: ${responseRead.status}`);
                 const currentData = await responseRead.json();
-                let archiveList = currentData.record || [];
+                let archiveList = Array.isArray(currentData.record) ? currentData.record : [];
                 
                 // 2. Aggiungi la nuova entry
                 archiveList.push(newEntry);
@@ -759,7 +811,7 @@
                 });
                 
                 if (!responseWrite.ok) {
-                    throw new Error(`HTTP error! status: ${responseWrite.status}`);
+                    throw new Error(`HTTP PUT error! status: ${responseWrite.status} - ${await responseWrite.text()}`);
                 }
 
                 alert('Sessione archiviata con successo!');
@@ -767,13 +819,15 @@
                 await loadArchive(); // Ricarica l'archivio per aggiornare la cassa
 
             } catch (error) {
-                console.error("Errore nell'archiviazione della sessione:", error);
-                alert("Errore nell'archiviazione. Controlla la console. Sessione NON salvata.");
+                console.error("Errore nell'archiviazione della sessione. Controlla la console:", error);
+                alert("Errore nell'archiviazione. Controlla la console per i dettagli. Sessione NON salvata.");
             }
         }
 
         /** Resetta l'intero archivio online a un array vuoto */
         async function resetOnlineArchive() {
+            if (!checkApiKey()) return;
+            
             if (!confirm("Sei sicuro di voler resettare TUTTO lo storico archiviato? Questa azione è irreversibile.")) return;
 
             try {
@@ -783,19 +837,19 @@
                         'Content-Type': 'application/json',
                         'X-ACCESS-KEY': API_KEY
                     },
-                    body: JSON.stringify([]) // Invia un array vuoto
+                    body: JSON.stringify([{}]) // Invia un array vuoto
                 });
                 
                 if (!responseWrite.ok) {
-                    throw new Error(`HTTP error! status: ${responseWrite.status}`);
+                    throw new Error(`HTTP error! status: ${responseWrite.status} - ${await responseWrite.text()}`);
                 }
 
                 alert('Archivio storico resettato con successo!');
                 loadArchive(); // Ricarica per aggiornare l'interfaccia
 
             } catch (error) {
-                console.error("Errore nel reset dell'archivio:", error);
-                alert("Errore nel reset dell'archivio. Controlla la console.");
+                console.error("Errore nel reset dell'archivio. Controlla la console. Questo errore spesso è dovuto a una chiave API sbagliata o a permessi mancanti su jsonbin.io:", error);
+                alert("ERRORE nel reset dell'archivio! Controlla la console per i dettagli. Se l'archiviazione funziona ma il reset no, è probabilmente un problema di permessi della tua chiave jsonbin.io.");
             }
         }
 
@@ -803,8 +857,7 @@
         function renderArchiveTable(data) {
             archiveTableBody.innerHTML = '';
             
-            data.sort((a, b) => new Date(b.data) - new Date(a.data)); // Ordina per data decrescente
-
+            data.sort((a, b) => parseItalianDate(b.data) - parseItalianDate(a.data)); // Ordina per data decrescente
             data.forEach(item => {
                 const row = archiveTableBody.insertRow();
                 row.innerHTML = `
@@ -818,7 +871,7 @@
         
         /** Calcola e aggiorna la Cassa Storica */
         function calculateCassaStorica(data) {
-            const totalNet = data.reduce((sum, item) => sum + item.netto, 0);
+            const totalNet = data.reduce((sum, item) => sum + (parseFloat(item.netto) || 0), 0);
             cassaStoricaValue.textContent = formatCurrency(totalNet);
             cassaStoricaValue.style.backgroundColor = totalNet >= 0 ? 'var(--green-light)' : 'var(--red)';
             cassaStoricaValue.style.color = totalNet >= 0 ? 'var(--black)' : 'var(--white)';
@@ -849,6 +902,7 @@
                     if (sessionData.currentStep === 0) {
                         calculateBetFactors();
                         setupNextStep(1, puntata); // Inizia il primo step con puntata iniziale
+                        notifyBetFactors(); // MOSTRA IL POP-UP
                     } else {
                         // Dal 10° numero in poi (o step successivi)
                         processExtraction(num);
@@ -886,7 +940,7 @@
         // Inizializzazione all'apertura della pagina
         window.onload = () => {
             resetSession();
-            // L'archivio viene caricato solo quando si accede alla vista archivio
+            gameView.style.display = 'block';
         };
     </script>
 </body>
