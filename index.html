@@ -355,7 +355,7 @@
         };
         const MAX_STEPS = 50;
         const ANALYSIS_COUNT = 9;
-        const API_KEY_PLACEHOLDER = 'SOSTITUISCI_CON_IL_TUO_BACKEND_O_PROXY'; // Usiamo una costante per il controllo
+        const API_KEY_PLACEHOLDER = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; // Usiamo una costante per il controllo
 
         // Stato di sessione
         let sessionData = {
@@ -643,15 +643,15 @@
 
             // Logica di STOP e Prossimo step
             let nextStep = currentStep + 1;
-            // nextBetAmount non è più puntataSingola, verrà aggiornato in base agli hits
 
-            // Il gioco FINISCE (si ferma la progressione) se il Saldo è positivo
+            // Il gioco FINISCE (e viene mostrato il pop-up) solo se il Saldo è STRETTAMENTE POSITIVO (> 0)
             if (sessionData.saldoRealTime > 0) {
                 showWinPopup(sessionData.saldoRealTime);
                 return; // Ferma ogni altra logica
             }
 
-            // LOGICA MODIFICATA:
+            // Calcolo importo prossima puntata (nextBetAmount)
+            let nextBetAmount;
             if (hits === 0) {
                 // Sconfitta: incrementa la singola puntata su ciascun fattore di una fiche
                 nextBetAmount = bet.colorBet + puntataSingola;
@@ -660,12 +660,15 @@
                 nextBetAmount = bet.colorBet; // Mantieni l'importo della puntata precedente
             }
 
-            // Prepara il prossimo step solo se siamo in perdita (sessionData.saldoRealTime < 0)
-            if (nextStep <= MAX_STEPS) {
+            // MODIFICA CORRETTA:
+            // Prepara il prossimo step SOLO SE il saldo NON è STRETTAMENTE POSITIVO (cioè <= 0)
+            // e non abbiamo superato MAX_STEPS.
+            if (sessionData.saldoRealTime <= 0 && nextStep <= MAX_STEPS) { 
                 setupNextStep(nextStep, nextBetAmount);
             }
             
             // Check max steps
+            // L'alert viene mostrato solo se siamo in perdita (saldo < 0) e abbiamo superato gli step massimi.
             if (nextStep > MAX_STEPS && sessionData.saldoRealTime < 0) {
                 alert("Raggiunto il limite massimo di 50 step. Sessione terminata in perdita. Archivia e resetta.");
             }
