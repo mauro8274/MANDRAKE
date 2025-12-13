@@ -39,16 +39,18 @@
             margin-bottom: 5px;
         }
         
+        /* STILE IMMAGINE RIMODIFICATO: Rimpicciolito */
         .header img {
-            max-width: 100%; /* Assicura che l'immagine sia responsiva */
+            max-width: 50%; /* Larghezza ridotta */
+            max-height: 12vh; /* Altezza massima per viewport */
             height: auto;
             display: block;
             margin: 0 auto; /* Centra l'immagine */
-            padding-top: 10px;
-            padding-bottom: 10px;
+            padding-top: 5px; /* Padding leggermente ridotto */
+            padding-bottom: 5px;
             box-sizing: border-box;
         }
-        /* FINE NUOVO STILE */
+        /* FINE STILE IMMAGINE RIMODIFICATO */
 
         label {
             display: block;
@@ -157,16 +159,16 @@
             gap: 10px;
             margin-top: 20px;
             margin-bottom: 20px; 
-            flex-wrap: wrap; /* Per smartphone */
+            flex-wrap: wrap; 
         }
         
-        /* Aggiungo un contenitore per il quarto pulsante */
+        /* Contenitore pulsanti principale */
         .main-buttons-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 15px; /* Riduci il margine superiore */
+            margin-bottom: 15px; /* Riduci il margine inferiore */
         }
         
         .main-buttons-row {
@@ -175,17 +177,19 @@
             flex-wrap: wrap;
         }
 
+        /* DIMENSIONE PULSANTI RIMODIFICATA */
         button {
             flex-grow: 1;
-            padding: 12px 15px;
+            padding: 8px 10px; /* Rimpicciolisci il padding */
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.3s;
-            font-size: 1em;
-            min-width: 120px;
+            font-size: 0.9em; /* Rimpicciolisci leggermente il font */
+            min-width: 100px;
         }
+        /* FINE DIMENSIONE PULSANTI RIMODIFICATA */
         
         #btnArchivia { background-color: #1e90ff; color: var(--white); }
         #btnArchivia:hover { background-color: #4169e1; }
@@ -259,13 +263,14 @@
             #saldoRealTimeValue {
                 font-size: 1.5em;
             }
-            /* Su mobile i 3 pulsanti principali stanno su una riga e il quarto sotto */
+            /* Su mobile i pulsanti restano a piena larghezza ma con padding ridotto */
             .main-buttons-row {
                 flex-direction: column;
                 gap: 5px;
             }
             .main-buttons-container button {
                 min-width: 100%;
+                padding: 8px 10px; /* Mantieni il padding ridotto anche su mobile */
             }
 
             .header h1 {
@@ -810,7 +815,7 @@
             
             try {
                 // 1. Carica solo l'ultima versione dell'archivio per maggiore efficienza
-                const response = await fetch(LATEST_BIN_URL, {
+                const response = await fetch(LATEST_BIN_URL, { 
                     method: 'GET',
                     headers: { 'X-ACCESS-KEY': API_KEY }
                 });
