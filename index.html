@@ -125,6 +125,12 @@
             position: sticky;
             top: 0;
         }
+        
+        /* Aggiungo uno stile specifico per le celle data/ora nell'archivio */
+        #archiveTable td:nth-child(1), #archiveTable td:nth-child(2) { 
+            font-size: 0.8em; 
+            white-space: nowrap;
+        }
 
         .highlighted-row {
             background-color: var(--green-light) !important;
@@ -232,6 +238,13 @@
             .header h1 {
                 font-size: 1.5em;
             }
+            /* Riduce la dimensione della data/ora sul mobile */
+            #archiveTable th:nth-child(1), #archiveTable td:nth-child(1) {
+                font-size: 0.6em;
+            }
+            #archiveTable th:nth-child(2), #archiveTable td:nth-child(2) {
+                font-size: 0.6em;
+            }
         }
     </style>
 </head>
@@ -311,8 +324,7 @@
                 <table id="archiveTable">
                     <thead>
                         <tr>
-                            <th>DATA</th>
-                            <th>NETTO (€)</th>
+                            <th>DATA</th> <th>ORA</th>  <th>NETTO (€)</th>
                             <th>INVEST. INIZIALE (€)</th>
                             <th>STEP CHIUSURA</th>
                         </tr>
@@ -385,15 +397,28 @@
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
         }
 
-        /** Parsea date italiane "gg/mm/aaaa" in oggetto Date (robusto) */
-        function parseItalianDate(ddmmyyyy) {
-            if (!ddmmyyyy) return new Date(NaN);
-            const parts = ddmmyyyy.split('/');
-            if (parts.length !== 3) return new Date(ddmmyyyy); // fallback
-            const d = parseInt(parts[0], 10);
-            const m = parseInt(parts[1], 10) - 1;
-            const y = parseInt(parts[2], 10);
-            return new Date(y, m, d);
+        /** Converte una stringa Data/Ora (locale) in oggetto Date. */
+        function parseDateTime(dateTimeString) {
+            // Supponiamo che la stringa sia in formato 'gg/mm/aaaa hh:mm:ss'
+            if (!dateTimeString) return new Date(NaN);
+            
+            const parts = dateTimeString.split(' ');
+            if (parts.length < 2) return new Date(dateTimeString); 
+            
+            const dateParts = parts[0].split('/');
+            const timeParts = parts[1].split(':');
+            
+            if (dateParts.length !== 3 || timeParts.length < 2) return new Date(dateTimeString);
+
+            // Costruisce l'oggetto Date (Anno, Mese-1, Giorno, Ore, Minuti, Secondi)
+            const y = parseInt(dateParts[2], 10);
+            const m = parseInt(dateParts[1], 10) - 1;
+            const d = parseInt(dateParts[0], 10);
+            const h = parseInt(timeParts[0], 10);
+            const min = parseInt(timeParts[1], 10);
+            const s = parseInt(timeParts[2] || 0, 10); // Secondi opzionali
+
+            return new Date(y, m, d, h, min, s);
         }
 
         /** Funzione per creare le righe iniziali della tabella scommesse */
@@ -728,8 +753,6 @@
 
         // === GESTIONE ARCHIVIO (JSONBIN.IO) ===
         
-        // Ho rimosso checkApiKey() come richiesto.
-        
         /** Carica i dati dell'archivio da jsonbin.io */
         async function loadArchive() {
             try {
@@ -752,7 +775,6 @@
 
             } catch (error) {
                 console.error("Errore nel caricamento dell'archivio. Controlla la console:", error);
-                // Ho rimosso l'alert per evitare interruzioni, lasciando il log in console.
                 renderArchiveTable([]);
                 calculateCassaStorica([]);
             }
@@ -764,9 +786,15 @@
                 alert("Non c'è una sessione attiva da archiviare.");
                 return;
             }
+            
+            // Ottiene data e ora corrente formattate
+            const now = new Date();
+            const datePart = now.toLocaleDateString('it-IT'); // Es: 13/12/2025
+            const timePart = now.toLocaleTimeString('it-IT'); // Es: 09:16:26
+            const dateTimeString = `${datePart} ${timePart}`; // Es: 13/12/2025 09:16:26
 
             const newEntry = {
-                data: new Date().toLocaleDateString('it-IT'),
+                dataOra: dateTimeString, // MODIFICA: Salva data e ora complete
                 netto: parseFloat(sessionData.saldoRealTime.toFixed(2)),
                 investimentoIniziale: parseFloat(puntataInput.value),
                 stepChiusura: sessionData.currentStep
@@ -820,7 +848,7 @@
                         'Content-Type': 'application/json',
                         'X-ACCESS-KEY': API_KEY
                     },
-                    body: JSON.stringify([{}]) // Invia un array vuoto (o un array con un solo oggetto vuoto per mantenere la struttura)
+                    body: JSON.stringify([{}]) // Invia un array con un oggetto vuoto per mantenere la struttura
                 });
                 
                 if (!responseWrite.ok) {
@@ -840,14 +868,25 @@
         function renderArchiveTable(data) {
             archiveTableBody.innerHTML = '';
             
-            data.sort((a, b) => parseItalianDate(b.data) - parseItalianDate(a.data)); // Ordina per data decrescente
+            // Ordinamento Cronologico (dal più recente al più vecchio)
+            // L'ordinamento è necessario per gestire vecchie entries o se l'API non garantisce l'ordine
+            data.sort((a, b) => {
+                const dateA = parseDateTime(a.dataOra);
+                const dateB = parseDateTime(b.dataOra);
+                return dateB.getTime() - dateA.getTime(); // Decrescente (più recente prima)
+            });
+
             data.forEach(item => {
                 // Saltiamo righe non valide o vuote
-                if (!item.data || item.netto === undefined) return; 
+                if (!item.dataOra || item.netto === undefined) return; 
 
+                // Dividiamo Data e Ora per la visualizzazione
+                const [datePart, timePart] = item.dataOra.split(' ');
+                
                 const row = archiveTableBody.insertRow();
                 row.innerHTML = `
-                    <td>${item.data}</td>
+                    <td>${datePart || '-'}</td>
+                    <td>${timePart || '-'}</td>
                     <td style="color: ${item.netto >= 0 ? 'var(--green-dark)' : 'var(--red)'};">${formatCurrency(item.netto)}</td>
                     <td>${formatCurrency(item.investimentoIniziale)}</td>
                     <td>${item.stepChiusura}</td>
@@ -857,6 +896,7 @@
         
         /** Calcola e aggiorna la Cassa Storica */
         function calculateCassaStorica(data) {
+            // Filtra per assicurarsi che 'netto' sia un numero valido prima di sommare
             const totalNet = data.reduce((sum, item) => sum + (parseFloat(item.netto) || 0), 0);
             cassaStoricaValue.textContent = formatCurrency(totalNet);
             cassaStoricaValue.style.backgroundColor = totalNet >= 0 ? 'var(--green-light)' : 'var(--red)';
