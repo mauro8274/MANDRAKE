@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Roulette Tracker & Strategia</title>
+    <link rel="icon" href="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" type="image/png">
     <style>
         /* CSS per Stile e Responsiveness */
         :root {
@@ -39,7 +40,7 @@
             margin-bottom: 5px;
         }
         
-        /* STILE IMMAGINE RIMODIFICATO: Rimpicciolito */
+        /* STILE IMMAGINE: Rimpicciolito */
         .header img {
             max-width: 50%; /* Larghezza ridotta */
             max-height: 12vh; /* Altezza massima per viewport */
@@ -50,7 +51,6 @@
             padding-bottom: 5px;
             box-sizing: border-box;
         }
-        /* FINE STILE IMMAGINE RIMODIFICATO */
 
         label {
             display: block;
@@ -167,8 +167,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: 15px; /* Riduci il margine superiore */
-            margin-bottom: 15px; /* Riduci il margine inferiore */
+            margin-top: 15px; 
+            margin-bottom: 15px; 
         }
         
         .main-buttons-row {
@@ -189,7 +189,6 @@
             font-size: 0.9em; /* Rimpicciolisci leggermente il font */
             min-width: 100px;
         }
-        /* FINE DIMENSIONE PULSANTI RIMODIFICATA */
         
         #btnArchivia { background-color: #1e90ff; color: var(--white); }
         #btnArchivia:hover { background-color: #4169e1; }
@@ -665,54 +664,60 @@
                 return;
             }
 
-            let winnings = 0;
+            let winnings = 0; // Totale del RITORNO (puntata + vincita)
             let hits = 0; // Contatore di fattori indovinati
-            const betAmount = bet.colorBet; // La puntata è uguale per tutti e 3 i fattori
+            const betAmount = bet.colorBet; // La puntata base è uguale per tutti e 3 i fattori
 
             // 1. Controllo Colore (paga 1:1)
             if (bet.colorBet > 0) {
                 const isRed = ROULETTE_MAP.RED.includes(extractedNumber);
                 const isBlack = ROULETTE_MAP.BLACK.includes(extractedNumber);
+                const targetColor = sessionData.betFactors.color;
 
                 if (extractedNumber !== 0 && (
-                    (sessionData.betFactors.color === 'RED' && isRed) ||
-                    (sessionData.betFactors.color === 'BLACK' && isBlack)
+                    (targetColor === 'RED' && isRed) ||
+                    (targetColor === 'BLACK' && isBlack)
                 )) {
                     winnings += betAmount * 2; // Ritorno (puntata + vincita)
                     hits++;
                 } else {
-                    winnings += 0; // Perde la puntata
+                    // Perdita: 0 winnings, la perdita verrà calcolata alla fine
                 }
             }
 
             // 2. Controllo Riga/Linea (paga 2:1)
             if (bet.lineBet > 0) {
-                const lineMap = ROULETTE_MAP[sessionData.betFactors.line];
+                const targetLine = sessionData.betFactors.line;
+                const lineMap = ROULETTE_MAP[targetLine];
                 if (extractedNumber !== 0 && lineMap && lineMap.includes(extractedNumber)) {
                     winnings += betAmount * 3; // Ritorno (puntata + 2*vincita)
                     hits++;
                 } else {
-                    winnings += 0;
+                     // Perdita: 0 winnings
                 }
             }
 
             // 3. Controllo Dozzina (paga 2:1)
             if (bet.dozenBet > 0) {
-                const dozenMap = ROULETTE_MAP[sessionData.betFactors.dozen];
+                const targetDozen = sessionData.betFactors.dozen;
+                const dozenMap = ROULETTE_MAP[targetDozen];
                 if (extractedNumber !== 0 && dozenMap && dozenMap.includes(extractedNumber)) {
                     winnings += betAmount * 3; // Ritorno (puntata + 2*vincita)
                     hits++;
                 } else {
-                    winnings += 0;
+                     // Perdita: 0 winnings
                 }
             }
 
             // Calcolo NETTO EVENTO e SALDO REAL TIME
-            const totalBetInRow = bet.totalBet;
-            const nettoEvento = winnings - totalBetInRow;
+            // Il totalBet è la somma di TUTTE le puntate fatte in questo step (es. 0.30€)
+            const totalBetInRow = bet.totalBet; 
+            
+            // NETTO = Ritorno Totale - Costo Totale
+            const nettoEvento = parseFloat((winnings - totalBetInRow).toFixed(2));
             
             bet.nettoEvento = nettoEvento;
-            sessionData.saldoRealTime = (sessionData.saldoRealTime + nettoEvento);
+            sessionData.saldoRealTime = parseFloat((sessionData.saldoRealTime + nettoEvento).toFixed(2));
 
             updateBettingTableUI(currentStep); // Aggiorna la riga corrente
             updateSaldoRealTimeUI();
@@ -729,11 +734,12 @@
             // Calcolo importo prossima puntata (nextBetAmount)
             let nextBetAmount;
             if (hits === 0) {
-                // Sconfitta: incrementa la singola puntata su ciascun fattore di una fiche
+                // Sconfitta totale: incrementa la singola puntata su ciascun fattore di una fiche
                 nextBetAmount = bet.colorBet + puntataSingola;
             } else {
                 // Vittoria (almeno un hit): la puntata per il prossimo step rimane invariata.
-                nextBetAmount = bet.colorBet; // Mantieni l'importo della puntata precedente
+                // Questo è corretto per mantenere la progressione sulla perdita restante.
+                nextBetAmount = bet.colorBet; 
             }
 
             // Progression check: Continua SOLO SE il saldo NON è strettamente positivo (saldo <= 0)
