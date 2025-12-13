@@ -333,9 +333,9 @@
         // === DATI E CONFIGURAZIONE GLOBALE ===
 
         // Configurazione per jsonbin.io
-        // *** IMPORTANTE: SOSTITUISCI IL SEGUENTE API_KEY CON LA TUA CHIAVE REALE DA JSONBIN.IO ***
+        // *** IMPORTANTE: PER FAR FUNZIONARE L'ARCHIVIO DEVI INSERIRE LA TUA CHIAVE REALE AL POSTO DI QUELLA SEGNAPOSTO ***
         const JSON_BIN_ID = '693c2d5343b1c97be9e984aa'; 
-        // L'utente deve sostituire la chiave qui sotto. La lascio come placeholder per sicurezza.
+        // Chiave segnaposto. Se l'archiviazione non funziona, sostituiscila con la tua chiave jsonbin.io.
         const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; 
         const API_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
 
@@ -355,7 +355,6 @@
         };
         const MAX_STEPS = 50;
         const ANALYSIS_COUNT = 9;
-        const API_KEY_PLACEHOLDER = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; // Usiamo una costante per il controllo
 
         // Stato di sessione
         let sessionData = {
@@ -660,9 +659,7 @@
                 nextBetAmount = bet.colorBet; // Mantieni l'importo della puntata precedente
             }
 
-            // MODIFICA CORRETTA:
-            // Prepara il prossimo step SOLO SE il saldo NON è STRETTAMENTE POSITIVO (cioè <= 0)
-            // e non abbiamo superato MAX_STEPS.
+            // Progression check: Continua SOLO SE il saldo NON è strettamente positivo (saldo <= 0)
             if (sessionData.saldoRealTime <= 0 && nextStep <= MAX_STEPS) { 
                 setupNextStep(nextStep, nextBetAmount);
             }
@@ -731,24 +728,10 @@
 
         // === GESTIONE ARCHIVIO (JSONBIN.IO) ===
         
-        function checkApiKey() {
-            if (API_KEY === API_KEY_PLACEHOLDER) {
-                alert("ERRORE ARCHIVIO: Devi sostituire 'API_KEY' nel codice JavaScript con la tua chiave jsonbin.io.");
-                console.error("API_KEY non configurata. Le chiamate API falliranno.");
-                return false;
-            }
-            return true;
-        }
-
-
+        // Ho rimosso checkApiKey() come richiesto.
+        
         /** Carica i dati dell'archivio da jsonbin.io */
         async function loadArchive() {
-            if (!checkApiKey()) {
-                renderArchiveTable([]);
-                calculateCassaStorica([]);
-                return;
-            }
-            
             try {
                 const response = await fetch(API_URL, {
                     method: 'GET',
@@ -769,7 +752,7 @@
 
             } catch (error) {
                 console.error("Errore nel caricamento dell'archivio. Controlla la console:", error);
-                alert("Errore nel caricamento dell'archivio. Controlla la console per i dettagli. (Potrebbe essere l'API Key)");
+                // Ho rimosso l'alert per evitare interruzioni, lasciando il log in console.
                 renderArchiveTable([]);
                 calculateCassaStorica([]);
             }
@@ -777,8 +760,6 @@
 
         /** Salva i dati dell'archivio su jsonbin.io (sovrascrive tutto) */
         async function saveArchive() {
-            if (!checkApiKey()) return;
-            
             if (sessionData.currentStep === 0) {
                 alert("Non c'è una sessione attiva da archiviare.");
                 return;
@@ -830,8 +811,6 @@
 
         /** Resetta l'intero archivio online a un array vuoto */
         async function resetOnlineArchive() {
-            if (!checkApiKey()) return;
-            
             if (!confirm("Sei sicuro di voler resettare TUTTO lo storico archiviato? Questa azione è irreversibile.")) return;
 
             try {
@@ -841,7 +820,7 @@
                         'Content-Type': 'application/json',
                         'X-ACCESS-KEY': API_KEY
                     },
-                    body: JSON.stringify([{}]) // Invia un array vuoto
+                    body: JSON.stringify([{}]) // Invia un array vuoto (o un array con un solo oggetto vuoto per mantenere la struttura)
                 });
                 
                 if (!responseWrite.ok) {
@@ -852,8 +831,8 @@
                 loadArchive(); // Ricarica per aggiornare l'interfaccia
 
             } catch (error) {
-                console.error("Errore nel reset dell'archivio. Controlla la console. Questo errore spesso è dovuto a una chiave API sbagliata o a permessi mancanti su jsonbin.io:", error);
-                alert("ERRORE nel reset dell'archivio! Controlla la console per i dettagli. Se l'archiviazione funziona ma il reset no, è probabilmente un problema di permessi della tua chiave jsonbin.io.");
+                console.error("Errore nel reset dell'archivio. Controlla la console:", error);
+                alert("ERRORE nel reset dell'archivio! Controlla la console per i dettagli.");
             }
         }
 
@@ -863,6 +842,9 @@
             
             data.sort((a, b) => parseItalianDate(b.data) - parseItalianDate(a.data)); // Ordina per data decrescente
             data.forEach(item => {
+                // Saltiamo righe non valide o vuote
+                if (!item.data || item.netto === undefined) return; 
+
                 const row = archiveTableBody.insertRow();
                 row.innerHTML = `
                     <td>${item.data}</td>
@@ -940,7 +922,7 @@
         document.getElementById('btnToArchive').addEventListener('click', () => {
             gameView.style.display = 'none';
             archiveView.style.display = 'block';
-            loadArchive();
+            loadArchive(); // Carica l'archivio senza controllo API key
         });
 
         document.getElementById('btnToGameFromArchive').addEventListener('click', () => {
