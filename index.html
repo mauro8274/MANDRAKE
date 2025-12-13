@@ -14,6 +14,7 @@
             --white: #ffffff;
             --gold: #ffd700;
             --gray-light: #f0f0f0;
+            --blue-recall: #007bff; /* Blu per il nuovo pulsante */
         }
 
         body {
@@ -37,6 +38,17 @@
             color: var(--gold);
             margin-bottom: 5px;
         }
+        
+        .header img {
+            max-width: 100%; /* Assicura che l'immagine sia responsiva */
+            height: auto;
+            display: block;
+            margin: 0 auto; /* Centra l'immagine */
+            padding-top: 10px;
+            padding-bottom: 10px;
+            box-sizing: border-box;
+        }
+        /* FINE NUOVO STILE */
 
         label {
             display: block;
@@ -126,8 +138,9 @@
             top: 0;
         }
         
-        /* Aggiungo uno stile specifico per le celle data/ora nell'archivio */
-        #archiveTable td:nth-child(1), #archiveTable td:nth-child(2) { 
+        /* Stile specifico per le celle data/ora nell'archivio */
+        #archiveTable th:nth-child(1), #archiveTable td:nth-child(1), 
+        #archiveTable th:nth-child(2), #archiveTable td:nth-child(2) { 
             font-size: 0.8em; 
             white-space: nowrap;
         }
@@ -145,6 +158,21 @@
             margin-top: 20px;
             margin-bottom: 20px; 
             flex-wrap: wrap; /* Per smartphone */
+        }
+        
+        /* Aggiungo un contenitore per il quarto pulsante */
+        .main-buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .main-buttons-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         button {
@@ -167,6 +195,9 @@
 
         #btnToArchive { background-color: #ffc107; color: var(--black); }
         #btnToArchive:hover { background-color: #e0a800; }
+        
+        #btnRecallLast7 { background-color: var(--blue-recall); color: var(--white); }
+        #btnRecallLast7:hover { background-color: #0056b3; }
         
         #btnToGameFromArchive { background-color: #28a745; color: var(--white); }
         #btnToGameFromArchive:hover { background-color: #1e7e34; }
@@ -228,13 +259,15 @@
             #saldoRealTimeValue {
                 font-size: 1.5em;
             }
-            .button-group, .button-group-archive {
+            /* Su mobile i 3 pulsanti principali stanno su una riga e il quarto sotto */
+            .main-buttons-row {
                 flex-direction: column;
                 gap: 5px;
             }
-            button {
+            .main-buttons-container button {
                 min-width: 100%;
             }
+
             .header h1 {
                 font-size: 1.5em;
             }
@@ -252,7 +285,7 @@
 
     <div id="gameView" class="view container">
         <div class="header">
-            <h1>🎲 Roulette Tracker</h1>
+            <img src="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" alt="Logo Roulette Tracker">
         </div>
 
         <div class="info-box">
@@ -268,10 +301,13 @@
             <span id="saldoRealTimeValue">0.00€</span>
         </div>
         
-        <div class="button-group">
-            <button id="btnArchivia">Archivia Sessione</button>
-            <button id="btnResetSession">Reset Sessione</button>
-            <button id="btnToArchive">Archivio</button>
+        <div class="main-buttons-container">
+            <div class="main-buttons-row">
+                <button id="btnArchivia">Archivia Sessione</button>
+                <button id="btnResetSession">Reset Sessione</button>
+                <button id="btnToArchive">Archivio</button>
+            </div>
+            <button id="btnRecallLast7">Richiama Ultimi 7 Numeri</button>
         </div>
         <div class="info-box">
             <h3>AREA DATI - Ultimi Numeri Estratti</h3>
@@ -324,7 +360,9 @@
                 <table id="archiveTable">
                     <thead>
                         <tr>
-                            <th>DATA</th> <th>ORA</th>  <th>NETTO (€)</th>
+                            <th>DATA</th>
+                            <th>ORA</th>
+                            <th>NETTO (€)</th>
                             <th>INVEST. INIZIALE (€)</th>
                             <th>STEP CHIUSURA</th>
                         </tr>
@@ -350,6 +388,9 @@
         // Chiave segnaposto. Se l'archiviazione non funziona, sostituiscila con la tua chiave jsonbin.io.
         const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; 
         const API_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
+        // Endpoint specifico per caricare l'ultima versione dell'archivio (latest)
+        const LATEST_BIN_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}/latest`;
+
 
         // Mappatura Roulette
         const ROULETTE_MAP = {
@@ -508,7 +549,13 @@
         /** Calcola i fattori di scommessa analizzando gli ultimi 9 numeri */
         function calculateBetFactors() {
             const numbers = sessionData.extractedNumbers.slice(-ANALYSIS_COUNT);
-            if (numbers.length < ANALYSIS_COUNT) return;
+            if (numbers.length < ANALYSIS_COUNT) {
+                sessionData.betFactors = { color: '', line: '', dozen: '' };
+                scommessaValue.textContent = 'Inserisci ' + (ANALYSIS_COUNT - numbers.length) + ' numeri per calcolare...';
+                scommessaContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                scommessaContainer.style.color = 'var(--black)';
+                return;
+            }
 
             const counts = {
                 'RED': 0, 'BLACK': 0,
@@ -567,7 +614,7 @@
         function notifyBetFactors() {
             const factors = sessionData.betFactors;
             const puntata = parseFloat(puntataInput.value) || 0.10;
-            const betAmount = sessionData.betHistory[sessionData.currentStep].colorBet || puntata; // Usa l'importo calcolato per lo step 1
+            const betAmount = sessionData.betHistory[sessionData.currentStep - 1]?.colorBet || puntata; 
             
             let displayColor = factors.color === 'RED' ? 'ROSSO' : factors.color === 'BLACK' ? 'NERO' : 'Non definito';
             let displayLine = factors.line === 'L2' ? 'LINEA 2 (2-35)' : factors.line === 'L3' ? 'LINEA 3 (3-36)' : 'Non definito';
@@ -750,13 +797,84 @@
         function showWinPopup(amount) {
             alert(`🎉 HAI VINTO ${formatCurrency(amount)}!! La sessione è conclusa con profitto. Archivia per salvare i dati.`);
         }
+        
+        // === NUOVA LOGICA: RICHIAMO ULTIMI 7 NUMERI ===
+
+        /** Richiama gli ultimi 7 numeri (escluso lo zero) dall'ultima sessione archiviata. */
+        async function recallLastSevenNumbers() {
+            if (sessionData.currentStep > 0 || sessionData.extractedNumbers.length > 0) {
+                if (!confirm("Stai per sovrascrivere la sessione corrente. Continuare?")) {
+                    return;
+                }
+            }
+            
+            try {
+                // 1. Carica solo l'ultima versione dell'archivio per maggiore efficienza
+                const response = await fetch(LATEST_BIN_URL, {
+                    method: 'GET',
+                    headers: { 'X-ACCESS-KEY': API_KEY }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${await response.text()}`);
+                }
+
+                const data = await response.json();
+                const archiveData = Array.isArray(data.record) ? data.record : [];
+                
+                if (archiveData.length === 0) {
+                    alert("Archivio vuoto. Non ci sono sessioni da cui richiamare i numeri.");
+                    return;
+                }
+                
+                // Ordina per data/ora (l'ultima archiviata)
+                archiveData.sort((a, b) => {
+                    const dateA = parseDateTime(a.dataOra);
+                    const dateB = parseDateTime(b.dataOra);
+                    return dateB.getTime() - dateA.getTime(); 
+                });
+
+                const lastSession = archiveData[0];
+
+                if (!lastSession || !Array.isArray(lastSession.extractedNumbers)) {
+                    alert("L'ultima sessione archiviata non contiene numeri estratti validi.");
+                    return;
+                }
+
+                // 2. Filtra gli zeri e prende gli ultimi 7
+                const numbersWithoutZero = lastSession.extractedNumbers.filter(num => num !== 0);
+                const lastSeven = numbersWithoutZero.slice(-7); // Prende gli ultimi 7 (o meno se non ci sono abbastanza)
+
+                if (lastSeven.length === 0) {
+                     alert("L'ultima sessione non contiene numeri validi (non-zero) da richiamare.");
+                     return;
+                }
+
+                // 3. Resetta lo stato e carica i numeri richiamati
+                resetSession();
+                sessionData.extractedNumbers = lastSeven; 
+                
+                // 4. Aggiorna l'interfaccia e ricalcola i fattori se ci sono abbastanza numeri
+                updateDataAreaTable();
+                calculateBetFactors(); 
+                
+                alert(`Richiamati con successo ${lastSeven.length} numeri (non-zero) dall'ultima sessione archiviata.`);
+                numeroEstrattoInput.focus();
+
+
+            } catch (error) {
+                console.error("Errore nel richiamo dei numeri. Controlla la console:", error);
+                alert("Errore nel richiamo dei numeri dall'archivio. Assicurati che l'API Key sia corretta.");
+            }
+        }
+
 
         // === GESTIONE ARCHIVIO (JSONBIN.IO) ===
         
         /** Carica i dati dell'archivio da jsonbin.io */
         async function loadArchive() {
             try {
-                const response = await fetch(API_URL, {
+                const response = await fetch(LATEST_BIN_URL, { // Usa latest per il caricamento
                     method: 'GET',
                     headers: {
                         'X-ACCESS-KEY': API_KEY
@@ -783,8 +901,13 @@
         /** Salva i dati dell'archivio su jsonbin.io (sovrascrive tutto) */
         async function saveArchive() {
             if (sessionData.currentStep === 0) {
-                alert("Non c'è una sessione attiva da archiviare.");
+                alert("Non c'è una sessione attiva da archiviare (Step 0).");
                 return;
+            }
+            if (sessionData.saldoRealTime <= 0) {
+                 if (!confirm("Attenzione: Il saldo finale è pari o inferiore a zero. Continuare con l'archiviazione?")) {
+                    return;
+                }
             }
             
             // Ottiene data e ora corrente formattate
@@ -794,15 +917,17 @@
             const dateTimeString = `${datePart} ${timePart}`; // Es: 13/12/2025 09:16:26
 
             const newEntry = {
-                dataOra: dateTimeString, // MODIFICA: Salva data e ora complete
+                dataOra: dateTimeString,
                 netto: parseFloat(sessionData.saldoRealTime.toFixed(2)),
                 investimentoIniziale: parseFloat(puntataInput.value),
-                stepChiusura: sessionData.currentStep
+                stepChiusura: sessionData.currentStep,
+                // Aggiungiamo l'array completo per la funzione di recall
+                extractedNumbers: [...sessionData.extractedNumbers] 
             };
 
             try {
                 // 1. Carica i dati attuali
-                const responseRead = await fetch(API_URL, {
+                const responseRead = await fetch(LATEST_BIN_URL, {
                     method: 'GET',
                     headers: { 'X-ACCESS-KEY': API_KEY }
                 });
@@ -829,7 +954,7 @@
 
                 alert('Sessione archiviata con successo!');
                 resetSession(); // Resetta il gioco dopo l'archiviazione
-                await loadArchive(); // Ricarica l'archivio per aggiornare la cassa
+                // Non ricarica l'archivio, lo farà solo se l'utente va nella vista Archivio
 
             } catch (error) {
                 console.error("Errore nell'archiviazione della sessione. Controlla la console:", error);
@@ -848,7 +973,7 @@
                         'Content-Type': 'application/json',
                         'X-ACCESS-KEY': API_KEY
                     },
-                    body: JSON.stringify([{}]) // Invia un array con un oggetto vuoto per mantenere la struttura
+                    body: JSON.stringify([]) // Invia un array vuoto
                 });
                 
                 if (!responseWrite.ok) {
@@ -869,7 +994,6 @@
             archiveTableBody.innerHTML = '';
             
             // Ordinamento Cronologico (dal più recente al più vecchio)
-            // L'ordinamento è necessario per gestire vecchie entries o se l'API non garantisce l'ordine
             data.sort((a, b) => {
                 const dateA = parseDateTime(a.dataOra);
                 const dateB = parseDateTime(b.dataOra);
@@ -877,8 +1001,8 @@
             });
 
             data.forEach(item => {
-                // Saltiamo righe non valide o vuote
-                if (!item.dataOra || item.netto === undefined) return; 
+                // Saltiamo righe non valide o incomplete
+                if (!item.dataOra || item.netto === undefined || item.investimentoIniziale === undefined) return; 
 
                 // Dividiamo Data e Ora per la visualizzazione
                 const [datePart, timePart] = item.dataOra.split(' ');
@@ -889,7 +1013,7 @@
                     <td>${timePart || '-'}</td>
                     <td style="color: ${item.netto >= 0 ? 'var(--green-dark)' : 'var(--red)'};">${formatCurrency(item.netto)}</td>
                     <td>${formatCurrency(item.investimentoIniziale)}</td>
-                    <td>${item.stepChiusura}</td>
+                    <td>${item.stepChiusura || '-'}</td>
                 `;
             });
         }
@@ -938,6 +1062,7 @@
                 }
             } else {
                 updateDataAreaTable();
+                calculateBetFactors(); // Aggiorna solo la tabella
             }
         }
 
@@ -962,7 +1087,7 @@
         document.getElementById('btnToArchive').addEventListener('click', () => {
             gameView.style.display = 'none';
             archiveView.style.display = 'block';
-            loadArchive(); // Carica l'archivio senza controllo API key
+            loadArchive(); // Carica l'archivio
         });
 
         document.getElementById('btnToGameFromArchive').addEventListener('click', () => {
@@ -979,6 +1104,9 @@
              }
         });
         document.getElementById('btnResetArchive').addEventListener('click', resetOnlineArchive);
+        
+        // Listener per il NUOVO PULSANTE
+        document.getElementById('btnRecallLast7').addEventListener('click', recallLastSevenNumbers);
 
 
         // Inizializzazione all'apertura della pagina
