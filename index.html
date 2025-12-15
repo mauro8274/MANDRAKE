@@ -820,7 +820,7 @@
             }
             
             try {
-                // 1. Carica solo l'ultima versione dell'archivio per maggiore efficienza
+                // 1. Carica l'ultima versione dell'archivio
                 const response = await fetch(LATEST_BIN_URL, { 
                     method: 'GET',
                     headers: { 'X-ACCESS-KEY': API_KEY }
@@ -831,33 +831,38 @@
                 }
 
                 const data = await response.json();
-                const archiveData = Array.isArray(data.record) ? data.record : [];
+                let archiveData = Array.isArray(data.record) ? data.record : [];
                 
-                if (archiveData.length === 0) {
-                    alert("Archivio vuoto. Non ci sono sessioni da cui richiamare i numeri.");
+                // AGGIORNAMENTO CRUCIALE: FILTRARE E ORDINARE
+                
+                // Filtra le sessioni non valide (es. l'oggetto vuoto {} o sessioni senza numeri)
+                const validSessions = archiveData.filter(session => 
+                    session.dataOra && 
+                    session.extractedNumbers && 
+                    Array.isArray(session.extractedNumbers) &&
+                    session.extractedNumbers.length > 0
+                );
+                
+                if (validSessions.length === 0) {
+                    alert("Nessuna sessione valida o con numeri estratti da richiamare trovata nell'archivio.");
                     return;
                 }
                 
-                // Ordina per data/ora (l'ultima archiviata)
-                archiveData.sort((a, b) => {
+                // Ordina per data/ora (dal più recente al più vecchio) per trovare l'ultima sessione archiviata
+                validSessions.sort((a, b) => {
                     const dateA = parseDateTime(a.dataOra);
                     const dateB = parseDateTime(b.dataOra);
                     return dateB.getTime() - dateA.getTime(); 
                 });
 
-                const lastSession = archiveData[0];
-
-                if (!lastSession || !Array.isArray(lastSession.extractedNumbers)) {
-                    alert("L'ultima sessione archiviata non contiene numeri estratti validi.");
-                    return;
-                }
+                const lastSession = validSessions[0]; // La sessione più recente valida
 
                 // 2. Filtra gli zeri e prende gli ultimi 7
                 const numbersWithoutZero = lastSession.extractedNumbers.filter(num => num !== 0);
                 const lastSeven = numbersWithoutZero.slice(-7); // Prende gli ultimi 7 (o meno se non ci sono abbastanza)
 
                 if (lastSeven.length === 0) {
-                     alert("L'ultima sessione non contiene numeri validi (non-zero) da richiamare.");
+                     alert("L'ultima sessione archiviata non contiene numeri validi (non-zero) da richiamare.");
                      return;
                 }
 
@@ -869,13 +874,13 @@
                 updateDataAreaTable();
                 calculateBetFactors(); 
                 
-                alert(`Richiamati con successo ${lastSeven.length} numeri (non-zero) dall'ultima sessione archiviata.`);
+                alert(`Richiamati con successo ${lastSeven.length} numeri (non-zero) dall'ultima sessione archiviata.\n\nUltima sessione: ${lastSession.dataOra}`);
                 numeroEstrattoInput.focus();
 
 
             } catch (error) {
                 console.error("Errore nel richiamo dei numeri. Controlla la console:", error);
-                alert("Errore nel richiamo dei numeri dall'archivio. Assicurati che l'API Key sia corretta.");
+                alert("Errore nel richiamo dei numeri dall'archivio. Controlla la console per i dettagli.");
             }
         }
 
@@ -1063,17 +1068,17 @@
                 
                 // Dopo il 9° numero (o se è la prima giocata dopo il 9°)
                 if (sessionData.currentStep === 0) {
-                    calculateBetFactors();
+                    calculateBetFactors(); // 1. CALCOLO INIZIALE (CORRETTO)
                     setupNextStep(1, puntata); // Inizia il primo step con puntata iniziale
                     notifyBetFactors(); // MOSTRA IL POP-UP
                 } else {
                     // Dal 10° numero in poi (o step successivi)
                     processExtraction(num);
-                    calculateBetFactors(); // Ricalcola i fattori per il prossimo giro
+                    // I fattori rimangono fissi fino alla vittoria o reset.
                 }
             } else {
                 updateDataAreaTable();
-                calculateBetFactors(); // Aggiorna solo la tabella
+                calculateBetFactors(); // Aggiorna solo la tabella durante l'inserimento dei primi 9
             }
         }
 
