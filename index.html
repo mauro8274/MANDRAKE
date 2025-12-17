@@ -6,16 +6,16 @@
     <title>Roulette Tracker & Strategia</title>
     <link rel="icon" href="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" type="image/png">
     <style>
-        /* CSS per Stile e Responsiveness - RIPRISTINATO ORIGINALE */
+        /* CSS per Stile e Responsiveness */
         :root {
-            --green-dark: #006400; 
-            --green-light: #90ee90; 
-            --red: #ff4500; 
+            --green-dark: #006400; /* Verde scuro, come un tavolo da roulette */
+            --green-light: #90ee90; /* Verde chiaro per evidenziare */
+            --red: #ff4500; /* Rosso per il testo saldo negativo */
             --black: #000000;
             --white: #ffffff;
             --gold: #ffd700;
             --gray-light: #f0f0f0;
-            --blue-recall: #007bff; 
+            --blue-recall: #007bff; /* Blu per il nuovo pulsante */
         }
 
         body {
@@ -33,19 +33,21 @@
             padding: 10px;
         }
 
+        /* Testo e Campi di Input */
         .header h1 {
             text-align: center;
             color: var(--gold);
             margin-bottom: 5px;
         }
         
+        /* STILE IMMAGINE: Rimpicciolito */
         .header img {
-            max-width: 50%; 
-            max-height: 12vh; 
+            max-width: 50%; /* Larghezza ridotta */
+            max-height: 12vh; /* Altezza massima per viewport */
             height: auto;
             display: block;
-            margin: 0 auto; 
-            padding-top: 5px; 
+            margin: 0 auto; /* Centra l'immagine */
+            padding-top: 5px; /* Padding leggermente ridotto */
             padding-bottom: 5px;
             box-sizing: border-box;
         }
@@ -70,6 +72,7 @@
             text-align: center;
         }
 
+        /* Contenitori per Saldo e Scommessa */
         .info-box {
             background-color: rgba(0, 0, 0, 0.4);
             padding: 15px;
@@ -90,7 +93,7 @@
             padding: 5px;
             border-radius: 5px;
             background-color: var(--white);
-            color: var(--red); 
+            color: var(--red); /* Default negativo */
         }
 
         #scommessaContainer {
@@ -114,6 +117,7 @@
             color: var(--black);
         }
 
+        /* Tabelle */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -136,12 +140,29 @@
             top: 0;
         }
         
+        /* Stile specifico per le celle data/ora nell'archivio */
+        #archiveTable th:nth-child(1), #archiveTable td:nth-child(1), 
+        #archiveTable th:nth-child(2), #archiveTable td:nth-child(2) { 
+            font-size: 0.8em; 
+            white-space: nowrap;
+        }
+
         .highlighted-row {
             background-color: var(--green-light) !important;
             color: var(--black);
             font-weight: bold;
         }
 
+        /* Pulsanti */
+        .button-group, .button-group-archive {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px; /* Spazio dopo Cassa Storica */
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+        }
+        
+        /* Contenitore pulsanti principale */
         .main-buttons-container {
             display: flex;
             flex-direction: column;
@@ -156,27 +177,46 @@
             flex-wrap: wrap;
         }
 
+        /* DIMENSIONE PULSANTI RIMODIFICATA */
         button {
             flex-grow: 1;
-            padding: 8px 10px;
+            padding: 8px 10px; /* Rimpicciolisci il padding */
             border: none;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
             transition: background-color 0.3s;
-            font-size: 0.9em;
+            font-size: 0.9em; /* Rimpicciolisci leggermente il font */
             min-width: 100px;
         }
         
         #btnArchivia { background-color: #1e90ff; color: var(--white); }
-        #btnResetSession { background-color: #dc3545; color: var(--white); }
-        #btnToArchive { background-color: #ffc107; color: var(--black); }
-        #btnRecallLast7 { background-color: var(--blue-recall); color: var(--white); }
-        #btnToGameFromArchive { background-color: #28a745; color: var(--white); }
-        #btnResetArchive { background-color: #6c757d; color: var(--white); }
+        #btnArchivia:hover { background-color: #4169e1; }
 
-        .view { display: none; }
-        #gameView { display: block; }
+        #btnResetSession { background-color: #dc3545; color: var(--white); }
+        #btnResetSession:hover { background-color: #c82333; }
+
+        #btnToArchive { background-color: #ffc107; color: var(--black); }
+        #btnToArchive:hover { background-color: #e0a800; }
+        
+        #btnRecallLast7 { background-color: var(--blue-recall); color: var(--white); }
+        #btnRecallLast7:hover { background-color: #0056b3; }
+        
+        #btnToGameFromArchive { background-color: #28a745; color: var(--white); }
+        #btnToGameFromArchive:hover { background-color: #1e7e34; }
+        
+        #btnResetArchive { background-color: #6c757d; color: var(--white); }
+        #btnResetArchive:hover { background-color: #5a6268; }
+
+        /* Viste (Gioco e Archivio) */
+        .view {
+            display: none;
+        }
+        
+        /* Assicuriamo che la vista di gioco sia impostata inizialmente */
+        #gameView {
+            display: block; 
+        }
 
         #archiveView {
             background-color: rgba(0, 0, 0, 0.5);
@@ -188,6 +228,10 @@
         #archiveView table {
             background-color: rgba(255, 255, 255, 0.9);
             color: var(--black);
+        }
+        
+        #archiveView th, #archiveView td {
+            border-color: rgba(0, 0, 0, 0.3);
         }
 
         #cassaStoricaContainer {
@@ -205,9 +249,44 @@
             display: block;
         }
         
+        /* Media Queries per Ottimizzazione Mobile */
         @media (max-width: 600px) {
-            .main-buttons-row { flex-direction: column; gap: 5px; }
-            .main-buttons-container button { min-width: 100%; }
+            .container {
+                padding: 5px;
+            }
+            input[type="number"], input[type="text"] {
+                font-size: 1em;
+            }
+            th, td {
+                padding: 6px 4px;
+                font-size: 0.75em;
+            }
+            .info-box {
+                padding: 10px;
+            }
+            #saldoRealTimeValue {
+                font-size: 1.5em;
+            }
+            /* Su mobile i pulsanti restano a piena larghezza ma con padding ridotto */
+            .main-buttons-row {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .main-buttons-container button {
+                min-width: 100%;
+                padding: 8px 10px; /* Mantieni il padding ridotto anche su mobile */
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+            /* Riduce la dimensione della data/ora sul mobile */
+            #archiveTable th:nth-child(1), #archiveTable td:nth-child(1) {
+                font-size: 0.6em;
+            }
+            #archiveTable th:nth-child(2), #archiveTable td:nth-child(2) {
+                font-size: 0.6em;
+            }
         }
     </style>
 </head>
@@ -215,15 +294,15 @@
 
     <div id="gameView" class="view container">
         <div class="header">
-            <img src="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" alt="Logo">
+            <img src="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" alt="Logo Roulette Tracker">
         </div>
 
         <div class="info-box">
             <label for="numeroEstratto">NUOVO NUMERO ESTRATTO (0-36):</label>
-            <input type="number" id="numeroEstratto" inputmode="numeric" autofocus>
+            <input type="number" id="numeroEstratto" inputmode="numeric" pattern="[0-9]*" min="0" max="36" placeholder="Inserisci numero" autofocus>
             
             <label for="puntataInput">PUNTATA (Valore di 1 Fiche in €):</label>
-            <input type="number" id="puntataInput" step="0.01" value="0.10">
+            <input type="number" id="puntataInput" min="0.01" step="0.01" value="0.10" placeholder="0.10">
         </div>
 
         <div id="saldoRealTimeContainer" class="info-box">
@@ -239,173 +318,281 @@
             </div>
             <button id="btnRecallLast7">Richiama Ultimi 7 Numeri</button>
         </div>
-        
         <div class="info-box">
+            <h3>AREA DATI - Ultimi Numeri Estratti</h3>
             <table id="dataAreaTable">
-                <thead><tr><th colspan="9">ULTIMI 9 NUMERI</th></tr></thead>
-                <tbody><tr id="lastNineNumbersRow"></tr></tbody>
+                <thead>
+                    <tr><th colspan="9">ULTIMI 9 NUMERI</th></tr>
+                </thead>
+                <tbody>
+                    <tr id="lastNineNumbersRow"></tr>
+                </tbody>
             </table>
         </div>
 
         <div id="scommessaContainer">
-            <h3>SCOMMESSA CONSIGLIATA</h3>
+            <h3>SCOMMESSA (Fattori da Puntare)</h3>
             <p id="scommessaValue">Inserisci 9 numeri per calcolare...</p>
         </div>
 
         <div class="info-box">
+            <h3>LOGICA DI GIOCO (Step di 50 Max)</h3>
             <table id="bettingTable">
                 <thead>
-                    <tr><th>STEP</th><th>COLORE</th><th>LINEA</th><th>DOZZINA</th><th>TOT. BET</th><th>NETTO</th></tr>
+                    <tr>
+                        <th>STEP</th>
+                        <th>COLORE</th>
+                        <th>LINEA</th>
+                        <th>DOZZINA</th>
+                        <th>TOT. BET (€)</th>
+                        <th>NETTO EVENTO (€)</th>
+                    </tr>
                 </thead>
-                <tbody></tbody>
+                <tbody>
+                    </tbody>
             </table>
         </div>
     </div>
 
     <div id="archiveView" class="view">
         <div class="container">
-            <div class="header"><h1>📚 Archivio Sessioni</h1></div>
+            <div class="header">
+                <h1>📚 Archivio Sessioni</h1>
+            </div>
+
             <div id="cassaStoricaContainer">
                 <label>CASSA STORICA NETTA</label>
                 <span id="cassaStoricaValue">0.00€</span>
             </div>
-            <div class="main-buttons-row" style="margin: 20px 0;">
+            
+            <div class="button-group-archive">
                 <button id="btnToGameFromArchive">Torna al Gioco</button>
                 <button id="btnResetArchive">Reset Archivio Storico</button>
             </div>
-            <table id="archiveTable">
-                <thead>
-                    <tr><th>DATA</th><th>ORA</th><th>NETTO</th><th>INVEST.</th><th>STEP</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="info-box" style="background-color: transparent;">
+                <table id="archiveTable">
+                    <thead>
+                        <tr>
+                            <th>DATA</th>
+                            <th>ORA</th>
+                            <th>NETTO (€)</th>
+                            <th>INVEST. INIZIALE (€)</th>
+                            <th>STEP CHIUSURA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // === CONFIGURAZIONE E VARIABILI RIPRISTINATE ===
+        // === DATI E CONFIGURAZIONE GLOBALE ===
+
+        // Configurazione per jsonbin.io
         const JSON_BIN_ID = '693c2d5343b1c97be9e984aa'; 
         const API_KEY = '$2a$10$ayP59Hfi7LkT35rikrQPk.p7vm9HN/Cko1Nwr2I0HrZyu0/1BVMLe'; 
         const API_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}`;
+        const LATEST_BIN_URL = `https://api.jsonbin.io/v3/b/${JSON_BIN_ID}/latest`;
 
+
+        // Mappatura Roulette
         const ROULETTE_MAP = {
             'RED': [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36],
             'BLACK': [2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35],
             'D1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
             'D2': [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
             'D3': [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36],
+            'L1': [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34], 
             'L2': [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35], 
             'L3': [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36]  
         };
+        const MAX_STEPS = 50;
+        const ANALYSIS_COUNT = 9;
 
         let sessionData = {
             extractedNumbers: [],
             currentStep: 0,
-            betFactors: { color: '', line: '', dozen: '' },
-            betHistory: [],
+            betFactors: { color: '', line: '', dozen: '' }, 
+            betHistory: [], 
             saldoRealTime: 0.00
         };
 
-        function formatCurrency(n) { return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n); }
+        const gameView = document.getElementById('gameView');
+        const archiveView = document.getElementById('archiveView');
+        const numeroEstrattoInput = document.getElementById('numeroEstratto');
+        const puntataInput = document.getElementById('puntataInput');
+        const saldoRealTimeValue = document.getElementById('saldoRealTimeValue');
+        const scommessaValue = document.getElementById('scommessaValue');
+        const scommessaContainer = document.getElementById('scommessaContainer');
+        const dataAreaTable = document.getElementById('lastNineNumbersRow');
+        const bettingTableBody = document.querySelector('#bettingTable tbody');
+        const cassaStoricaValue = document.getElementById('cassaStoricaValue');
+        const archiveTableBody = document.querySelector('#archiveTable tbody');
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(amount);
+        }
 
         function createInitialBettingTable() {
-            const body = document.querySelector('#bettingTable tbody');
-            body.innerHTML = ''; sessionData.betHistory = [];
-            for (let i = 1; i <= 50; i++) {
-                const row = body.insertRow(); row.id = `stepRow-${i}`;
-                row.innerHTML = `<td>${i}</td><td data-col="color">0.00€</td><td data-col="line">0.00€</td><td data-col="dozen">0.00€</td><td data-col="totBet">0.00€</td><td data-col="netto">0.00€</td>`;
-                sessionData.betHistory.push({ step: i, colorBet: 0, lineBet: 0, dozenBet: 0, totalBet: 0, netto: 0, isPlayed: false });
+            bettingTableBody.innerHTML = '';
+            sessionData.betHistory = [];
+            for (let i = 1; i <= MAX_STEPS; i++) {
+                const row = bettingTableBody.insertRow();
+                row.id = `stepRow-${i}`;
+                row.innerHTML = `
+                    <td>${i}</td>
+                    <td data-col="color">0.00€</td>
+                    <td data-col="line">0.00€</td>
+                    <td data-col="dozen">0.00€</td>
+                    <td data-col="totBet">0.00€</td>
+                    <td data-col="nettoEvento">0.00€</td>
+                `;
+                sessionData.betHistory.push({
+                    step: i,
+                    colorBet: 0.00,
+                    lineBet: 0.00,
+                    dozenBet: 0.00,
+                    totalBet: 0.00,
+                    nettoEvento: 0.00,
+                    isPlayed: false 
+                });
             }
         }
 
-        // === MODIFICA LOGICA RICHIESTA (UNICA MODIFICA) ===
-        function calculateBetFactors() {
-            const numbers = sessionData.extractedNumbers.slice(-9);
-            if (numbers.length < 9) return;
+        function updateDataAreaTable() {
+            dataAreaTable.innerHTML = '';
+            const lastNine = sessionData.extractedNumbers.slice(-ANALYSIS_COUNT); 
+            for (let i = 0; i < ANALYSIS_COUNT; i++) {
+                const number = lastNine[i] !== undefined ? lastNine[i] : '-';
+                const cell = dataAreaTable.insertCell();
+                cell.textContent = number;
+                let bgColor = 'transparent';
+                let textColor = 'var(--white)';
+                if (number === 0) {
+                    bgColor = 'var(--green-light)';
+                    textColor = 'var(--black)';
+                } else if (ROULETTE_MAP.RED.includes(number)) {
+                    bgColor = 'var(--red)';
+                    textColor = 'var(--white)';
+                } else if (ROULETTE_MAP.BLACK.includes(number)) {
+                    bgColor = 'var(--black)';
+                    textColor = 'var(--white)';
+                }
+                cell.style.backgroundColor = bgColor;
+                cell.style.color = textColor;
+            }
+        }
 
-            const counts = { RED: 0, BLACK: 0, D1: 0, D3: 0 };
-            numbers.forEach(n => {
-                if (n === 0) return;
-                if (ROULETTE_MAP.RED.includes(n)) counts.RED++;
-                if (ROULETTE_MAP.BLACK.includes(n)) counts.BLACK++;
-                if (ROULETTE_MAP.D1.includes(n)) counts.D1++;
-                if (ROULETTE_MAP.D3.includes(n)) counts.D3++;
+        function calculateBetFactors() {
+            const numbers = sessionData.extractedNumbers.slice(-ANALYSIS_COUNT);
+            if (numbers.length < ANALYSIS_COUNT) return;
+
+            const counts = { 'RED': 0, 'BLACK': 0, 'D1': 0, 'D3': 0 };
+            numbers.forEach(num => {
+                if (num === 0) return;
+                if (ROULETTE_MAP.RED.includes(num)) counts.RED++;
+                if (ROULETTE_MAP.BLACK.includes(num)) counts.BLACK++;
+                if (ROULETTE_MAP.D1.includes(num)) counts.D1++;
+                if (ROULETTE_MAP.D3.includes(num)) counts.D3++;
             });
 
-            // Colore e Dozzina: Chi è uscito meno
+            // LOGICA COLORE E DOZZINA: Chi è uscito meno
             sessionData.betFactors.color = counts.RED <= counts.BLACK ? 'RED' : 'BLACK';
             sessionData.betFactors.dozen = counts.D1 <= counts.D3 ? 'D1' : 'D3';
 
-            // NUOVA REGOLA: Riga dipende dal colore
+            // NUOVA LOGICA RIGA: Dipende dal colore
             sessionData.betFactors.line = (sessionData.betFactors.color === 'RED') ? 'L3' : 'L2';
-
+            
             updateScommessaUI();
         }
 
         function updateScommessaUI() {
-            const f = sessionData.betFactors;
-            const displayColor = f.color === 'RED' ? 'ROSSO' : 'NERO';
-            const displayLine = f.line === 'L3' ? 'LINEA 3 (3-36)' : 'LINEA 2 (2-35)';
-            const displayDozen = f.dozen === 'D1' ? 'DOZZINA 1' : 'DOZZINA 3';
-            
-            document.getElementById('scommessaValue').innerHTML = `<span style="color:${f.color==='RED'?'red':'black'}">${displayColor}</span> | ${displayLine} | ${displayDozen}`;
+            const factors = sessionData.betFactors;
+            let displayColor = factors.color === 'RED' ? 'ROSSO' : 'NERO';
+            let displayLine = factors.line === 'L2' ? 'LINEA 2 (2-35)' : 'LINEA 3 (3-36)';
+            let displayDozen = factors.dozen === 'D1' ? 'DOZZINA 1 (1-12)' : 'DOZZINA 3 (25-36)';
+
+            scommessaValue.innerHTML = `
+                <span style="color: ${factors.color === 'RED' ? 'red' : 'black'}; background-color: ${factors.color === 'BLACK' ? 'white' : 'transparent'}; padding: 2px 5px; border-radius: 3px;">${displayColor}</span><br>
+                ${displayLine}<br>
+                ${displayDozen}
+            `;
+            scommessaContainer.style.backgroundColor = 'var(--gold)';
         }
 
-        // === LOGICA DI GIOCO RIPRISTINATA ===
-        function processExtraction(n) {
-            const step = sessionData.currentStep;
-            const bet = sessionData.betHistory[step - 1];
-            let win = 0; let hits = 0;
+        function processExtraction(extractedNumber) {
+            const currentStep = sessionData.currentStep;
+            const bet = sessionData.betHistory[currentStep - 1];
+            const puntataSingola = parseFloat(puntataInput.value);
 
-            if (ROULETTE_MAP[sessionData.betFactors.color].includes(n)) { win += bet.colorBet * 2; hits++; }
-            if (ROULETTE_MAP[sessionData.betFactors.line].includes(n)) { win += bet.lineBet * 3; hits++; }
-            if (ROULETTE_MAP[sessionData.betFactors.dozen].includes(n)) { win += bet.dozenBet * 3; hits++; }
+            let winnings = 0; let hits = 0;
+            const betAmount = bet.colorBet;
 
-            const netto = parseFloat((win - bet.totalBet).toFixed(2));
-            bet.netto = netto;
-            sessionData.saldoRealTime = parseFloat((sessionData.saldoRealTime + netto).toFixed(2));
+            if (ROULETTE_MAP[sessionData.betFactors.color].includes(extractedNumber) && extractedNumber !== 0) {
+                winnings += betAmount * 2; hits++;
+            }
+            if (ROULETTE_MAP[sessionData.betFactors.line].includes(extractedNumber) && extractedNumber !== 0) {
+                winnings += betAmount * 3; hits++;
+            }
+            if (ROULETTE_MAP[sessionData.betFactors.dozen].includes(extractedNumber) && extractedNumber !== 0) {
+                winnings += betAmount * 3; hits++;
+            }
 
-            const row = document.getElementById(`stepRow-${step}`);
-            row.classList.remove('highlighted-row');
-            row.querySelector('[data-col="netto"]').textContent = formatCurrency(netto);
-            row.querySelector('[data-col="netto"]').style.color = netto >= 0 ? 'green' : 'red';
+            const nettoEvento = parseFloat((winnings - bet.totalBet).toFixed(2));
+            bet.nettoEvento = nettoEvento;
+            sessionData.saldoRealTime = parseFloat((sessionData.saldoRealTime + nettoEvento).toFixed(2));
 
-            document.getElementById('saldoRealTimeValue').textContent = formatCurrency(sessionData.saldoRealTime);
-            document.getElementById('saldoRealTimeValue').style.color = sessionData.saldoRealTime >= 0 ? 'green' : 'red';
+            updateBettingTableUI(currentStep);
+            saldoRealTimeValue.textContent = formatCurrency(sessionData.saldoRealTime);
+            saldoRealTimeValue.style.color = sessionData.saldoRealTime >= 0 ? 'green' : 'var(--red)';
 
             if (sessionData.saldoRealTime > 0) {
                 alert(`🎉 VINTO ${formatCurrency(sessionData.saldoRealTime)}! Archivia la sessione.`);
                 return;
             }
-            if (step < 50) setupNextStep(step + 1, hits === 0 ? bet.colorBet + parseFloat(document.getElementById('puntataInput').value) : bet.colorBet);
+
+            let nextStep = currentStep + 1;
+            if (nextStep <= MAX_STEPS) {
+                setupNextStep(nextStep, hits === 0 ? bet.colorBet + puntataSingola : bet.colorBet);
+            }
         }
 
-        function setupNextStep(s, amt) {
-            sessionData.currentStep = s;
-            const b = sessionData.betHistory[s - 1];
-            b.colorBet = b.lineBet = b.dozenBet = amt;
-            b.totalBet = parseFloat((amt * 3).toFixed(2));
-            b.isPlayed = true;
-
-            const row = document.getElementById(`stepRow-${s}`);
+        function setupNextStep(step, betAmount) {
+            sessionData.currentStep = step;
+            const nextBet = sessionData.betHistory[step - 1];
+            const row = document.getElementById(`stepRow-${step}`);
+            nextBet.colorBet = nextBet.lineBet = nextBet.dozenBet = betAmount;
+            nextBet.totalBet = parseFloat((betAmount * 3).toFixed(2));
+            nextBet.isPlayed = true;
             row.classList.add('highlighted-row');
-            row.querySelector('[data-col="color"]').textContent = formatCurrency(amt);
-            row.querySelector('[data-col="line"]').textContent = formatCurrency(amt);
-            row.querySelector('[data-col="dozen"]').textContent = formatCurrency(amt);
-            row.querySelector('[data-col="totBet"]').textContent = formatCurrency(b.totalBet);
+            row.querySelector('td[data-col="color"]').textContent = formatCurrency(betAmount);
+            row.querySelector('td[data-col="line"]').textContent = formatCurrency(betAmount);
+            row.querySelector('td[data-col="dozen"]').textContent = formatCurrency(betAmount);
+            row.querySelector('td[data-col="totBet"]').textContent = formatCurrency(nextBet.totalBet);
+            if (step > 1) document.getElementById(`stepRow-${step-1}`).classList.remove('highlighted-row');
         }
 
-        // === FUNZIONI ARCHIVIO COMPLETE E FUNZIONANTI ===
-        async function save() {
+        function updateBettingTableUI(step) {
+            const bet = sessionData.betHistory[step - 1];
+            const cell = document.getElementById(`stepRow-${step}`).querySelector('td[data-col="nettoEvento"]');
+            cell.textContent = formatCurrency(bet.nettoEvento);
+            cell.style.color = bet.nettoEvento >= 0 ? 'green' : 'red';
+        }
+
+        // --- GESTIONE ARCHIVIO ---
+        async function saveSession() {
             if(sessionData.currentStep === 0) return alert("Nessuna sessione attiva.");
             try {
-                const resLoad = await fetch(`${API_URL}/latest`, { headers: {'X-ACCESS-KEY': API_KEY}});
-                const data = await resLoad.json();
+                const res = await fetch(LATEST_BIN_URL, { headers: {'X-ACCESS-KEY': API_KEY}});
+                const data = await res.json();
                 let list = Array.isArray(data.record) ? data.record : [];
                 list.push({
                     dataOra: new Date().toLocaleString('it-IT'),
                     netto: sessionData.saldoRealTime,
-                    investimentoIniziale: parseFloat(document.getElementById('puntataInput').value),
+                    investimentoIniziale: parseFloat(puntataInput.value),
                     stepChiusura: sessionData.currentStep,
                     extractedNumbers: [...sessionData.extractedNumbers]
                 });
@@ -420,86 +607,59 @@
 
         async function loadArchive() {
             try {
-                const res = await fetch(`${API_URL}/latest`, { headers: {'X-ACCESS-KEY': API_KEY}});
+                const res = await fetch(LATEST_BIN_URL, { headers: {'X-ACCESS-KEY': API_KEY}});
                 const data = await res.json();
                 const list = Array.isArray(data.record) ? data.record : [];
-                const tbody = document.querySelector('#archiveTable tbody');
-                tbody.innerHTML = ''; let total = 0;
-
+                archiveTableBody.innerHTML = ''; let total = 0;
                 list.slice().reverse().forEach(i => {
-                    const netto = parseFloat(i.netto) || 0;
-                    total += netto;
-                    const r = tbody.insertRow();
+                    const netto = parseFloat(i.netto) || 0; total += netto;
+                    const r = archiveTableBody.insertRow();
                     const [d, t] = i.dataOra.split(' ');
                     r.innerHTML = `<td>${d}</td><td>${t}</td><td style="color:${netto>=0?'green':'red'}">${formatCurrency(netto)}</td><td>${formatCurrency(i.investimentoIniziale)}</td><td>${i.stepChiusura}</td>`;
                 });
-                const cEl = document.getElementById('cassaStoricaValue');
-                cEl.textContent = formatCurrency(total);
-                cEl.style.color = total >= 0 ? 'black' : 'white';
-                cEl.parentElement.style.backgroundColor = total >= 0 ? 'var(--green-light)' : 'var(--red)';
+                cassaStoricaValue.textContent = formatCurrency(total);
+                cassaStoricaValue.parentElement.style.backgroundColor = total >= 0 ? 'var(--gold)' : 'var(--red)';
             } catch(e) { console.error(e); }
         }
 
-        async function recall() {
-            try {
-                const res = await fetch(`${API_URL}/latest`, { headers: {'X-ACCESS-KEY': API_KEY}});
-                const data = await res.json();
-                const list = Array.isArray(data.record) ? data.record : [];
-                const last = list.reverse().find(s => s.extractedNumbers && s.extractedNumbers.length > 0);
-                if(!last) return alert("Nessuna sessione.");
-                sessionData.extractedNumbers = last.extractedNumbers.filter(n => n !== 0).slice(-7);
-                updateNumbersUI(); calculateBetFactors();
-                alert(`Richiamati ${sessionData.extractedNumbers.length} numeri.`);
-            } catch(e) { alert("Errore recupero."); }
-        }
-
-        function updateNumbersUI() {
-            const row = document.getElementById('lastNineNumbersRow');
-            row.innerHTML = '';
-            sessionData.extractedNumbers.slice(-9).forEach(n => {
-                const cell = row.insertCell(); cell.textContent = n;
-                cell.style.backgroundColor = n === 0 ? 'var(--green-light)' : (ROULETTE_MAP.RED.includes(n) ? 'var(--red)' : 'var(--black)');
-                cell.style.color = 'white';
-            });
-        }
-
-        // Inizializzazione e Eventi
-        document.getElementById('numeroEstratto').addEventListener('keydown', e => {
+        numeroEstrattoInput.addEventListener('keydown', e => {
             if(e.key === 'Enter') {
                 const n = parseInt(e.target.value);
                 if(isNaN(n) || n<0 || n>36) return;
                 sessionData.extractedNumbers.push(n);
-                e.target.value = ''; updateNumbersUI();
+                e.target.value = ''; updateDataAreaTable();
                 if(sessionData.extractedNumbers.length >= 9) {
                     if(sessionData.currentStep === 0) {
                         calculateBetFactors();
-                        setupNextStep(1, parseFloat(document.getElementById('puntataInput').value));
+                        setupNextStep(1, parseFloat(puntataInput.value));
                         alert("🔔 STRATEGIA INIZIATA!");
                     } else processExtraction(n);
                 }
             }
         });
 
-        document.getElementById('btnArchivia').addEventListener('click', save);
-        document.getElementById('btnRecallLast7').addEventListener('click', recall);
+        document.getElementById('btnArchivia').addEventListener('click', saveSession);
         document.getElementById('btnToArchive').addEventListener('click', () => {
-            document.getElementById('gameView').style.display = 'none';
-            document.getElementById('archiveView').style.display = 'block';
-            loadArchive();
+            gameView.style.display = 'none'; archiveView.style.display = 'block'; loadArchive();
         });
         document.getElementById('btnToGameFromArchive').addEventListener('click', () => {
-            document.getElementById('gameView').style.display = 'block';
-            document.getElementById('archiveView').style.display = 'none';
+            gameView.style.display = 'block'; archiveView.style.display = 'none';
         });
         document.getElementById('btnResetSession').addEventListener('click', () => location.reload());
-        document.getElementById('btnResetArchive').addEventListener('click', async () => {
-            if(confirm("Reset totale?")) {
-                await fetch(API_URL, { method: 'PUT', headers: {'Content-Type': 'application/json', 'X-ACCESS-KEY': API_KEY}, body: JSON.stringify([]) });
-                loadArchive();
-            }
+        document.getElementById('btnRecallLast7').addEventListener('click', async () => {
+            try {
+                const res = await fetch(LATEST_BIN_URL, { headers: {'X-ACCESS-KEY': API_KEY}});
+                const data = await res.json();
+                const last = data.record.reverse().find(s => s.extractedNumbers && s.extractedNumbers.length > 0);
+                if(last) {
+                    sessionData.extractedNumbers = last.extractedNumbers.filter(n => n !== 0).slice(-7);
+                    updateDataAreaTable(); calculateBetFactors();
+                    alert("Ultimi 7 numeri richiamati!");
+                }
+            } catch(e) { alert("Errore richiamo."); }
         });
 
-        window.onload = () => { createInitialBettingTable(); document.getElementById('numeroEstratto').focus(); };
+        window.onload = createInitialBettingTable;
     </script>
 </body>
 </html>
