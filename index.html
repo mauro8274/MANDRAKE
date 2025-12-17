@@ -595,14 +595,11 @@
                                             counts.BLACK < counts.RED ? 'BLACK' : 
                                             'N/A';
 
-            // 2. Logica Riga (Punta quello uscito meno, MAI L1)
-            let lineCounts = { 'L2': counts.L2, 'L3': counts.L3 };
-            if (lineCounts.L2 < lineCounts.L3) {
-                sessionData.betFactors.line = 'L2';
-            } else if (lineCounts.L3 < lineCounts.L2) {
+            // 2. Logica Riga Correlata al Colore (RED -> L3, BLACK/Altro -> L2)
+            if (sessionData.betFactors.color === 'RED') {
                 sessionData.betFactors.line = 'L3';
             } else {
-                sessionData.betFactors.line = 'L2'; 
+                sessionData.betFactors.line = 'L2';
             }
             
             // 3. Logica Dozzina (Punta quello uscito meno, MAI D2)
