@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roulette Tracker - PRO</title>
+    <title>Roulette Tracker PRO</title>
     <link rel="icon" href="https://raw.githubusercontent.com/mauro8274/MANDRAKE/13cdc9b29c08d454e8ac3aee5a65679c15ad97d2/IMG_0648.png" type="image/png">
     <style>
         :root {
@@ -18,7 +18,7 @@
 
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: var(--green-dark); color: var(--white); }
         .container { max-width: 1200px; margin: auto; padding: 10px; }
-        .header img { max-width: 50%; max-height: 12vh; height: auto; display: block; margin: 0 auto; padding: 5px 0; }
+        .header img { max-width: 50%; max-height: 12vh; height: auto; display: block; margin: 0 auto; padding: 10px 0; }
         
         input[type="number"] { width: 100%; padding: 12px; margin: 5px 0 10px; border-radius: 5px; border: 1px solid var(--gold); box-sizing: border-box; font-size: 1.1em; text-align: center; }
 
@@ -46,8 +46,10 @@
         #btnResetArchive { background-color: #6c757d; color: white; }
 
         .view { display: none; }
-        #archiveView { background-color: rgba(0, 0, 0, 0.8); min-height: 100vh; padding: 20px; }
-        #cassaStoricaValue { font-size: 2em; font-weight: bold; display: block; text-align: center; padding: 10px; border-radius: 8px; margin: 10px 0; }
+        /* FISSO: Sfondo archivio nero trasparente, non tutto verde */
+        #archiveView { background-color: rgba(0, 0, 0, 0.85); min-height: 100vh; padding: 20px; box-sizing: border-box; }
+        
+        #cassaStoricaValue { font-size: 2.2em; font-weight: bold; display: block; text-align: center; padding: 15px; border-radius: 8px; margin: 10px 0; background-color: var(--white); color: var(--black); }
 
         @media (max-width: 600px) { .main-buttons-row { flex-direction: column; } }
     </style>
@@ -104,21 +106,23 @@
 
     <div id="archiveView" class="view">
         <div class="container">
-            <h1 style="text-align: center; color: var(--gold);">Archivio Storico</h1>
-            <div id="cassaStoricaContainer" class="info-box">
-                <label style="text-align: center; display: block; color: white;">CASSA STORICA NETTA</label>
+            <h1 style="text-align: center; color: var(--gold);">📚 Archivio Sessioni</h1>
+            <div class="info-box">
+                <label style="text-align: center; display: block; color: var(--gold); font-weight: bold;">CASSA STORICA NETTA</label>
                 <span id="cassaStoricaValue">0.00€</span>
             </div>
             <div class="main-buttons-row" style="margin-bottom: 20px;">
                 <button id="btnToGameFromArchive">Torna al Gioco</button>
                 <button id="btnResetArchive">Svuota Archivio</button>
             </div>
-            <table id="archiveTable" style="background: white; color: black;">
-                <thead>
-                    <tr><th>DATA</th><th>ORA</th><th>NETTO</th><th>INVEST.</th><th>STEP</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+            <div class="info-box" style="background: white; padding: 5px;">
+                <table id="archiveTable" style="color: black; margin-top: 0;">
+                    <thead style="background: #eee;">
+                        <tr><th>DATA</th><th>ORA</th><th>NETTO</th><th>INV.</th><th>STEP</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -154,23 +158,21 @@
             state.numbers.slice(-9).forEach(n => {
                 const c = row.insertCell(); c.textContent = n;
                 c.style.background = n === 0 ? 'var(--green-light)' : (MAP.RED.includes(n) ? 'var(--red)' : 'black');
+                c.style.color = 'white';
             });
         }
 
-        // --- LOGICA RICHIESTA: RIGA DIPENDENTE DAL COLORE ---
         function calcFactors() {
             const last9 = state.numbers.slice(-9);
             const counts = { RED: 0, BLACK: 0, D1: 0, D3: 0 };
             last9.forEach(n => {
                 if(n===0) return;
-                if(MAP.RED.includes(n)) counts.RED++; else counts.BLACK++;
+                if(MAP.RED.includes(n)) counts.RED++; else if(MAP.BLACK.includes(n)) counts.BLACK++;
                 if(MAP.D1.includes(n)) counts.D1++; else if(MAP.D3.includes(n)) counts.D3++;
             });
 
             state.factors.color = counts.RED <= counts.BLACK ? 'RED' : 'BLACK';
             state.factors.dozen = counts.D1 <= counts.D3 ? 'D1' : 'D3';
-            
-            // Logica Diretta: Rosso -> L3 | Nero -> L2
             state.factors.line = (state.factors.color === 'RED') ? 'L3' : 'L2';
 
             const sView = document.getElementById('scommessaValue');
@@ -178,7 +180,9 @@
         }
 
         async function handleInput() {
-            const n = parseInt(document.getElementById('numeroEstratto').value);
+            const val = document.getElementById('numeroEstratto').value;
+            if(val === "") return;
+            const n = parseInt(val);
             if(isNaN(n) || n<0 || n>36) return;
             state.numbers.push(n);
             document.getElementById('numeroEstratto').value = '';
@@ -198,7 +202,7 @@
         function startStep(s, amt) {
             state.step = s;
             const h = state.history[s-1];
-            h.amt = amt; h.total = amt * 3; h.played = true;
+            h.amt = amt; h.total = parseFloat((amt * 3).toFixed(2)); h.played = true;
             const r = document.getElementById(`row-${s}`);
             r.classList.add('highlighted-row');
             r.cells[1].textContent = fmt(amt); r.cells[2].textContent = fmt(amt);
@@ -212,8 +216,9 @@
             if(MAP[state.factors.line].includes(n)) { win += h.amt * 3; hits++; }
             if(MAP[state.factors.dozen].includes(n)) { win += h.amt * 3; hits++; }
 
-            const netto = win - h.total;
-            state.saldo += netto;
+            const netto = parseFloat((win - h.total).toFixed(2));
+            state.saldo = parseFloat((state.saldo + netto).toFixed(2));
+            
             const r = document.getElementById(`row-${state.step}`);
             r.classList.remove('highlighted-row');
             r.cells[5].textContent = fmt(netto);
@@ -222,38 +227,13 @@
             document.getElementById('saldoRealTimeValue').textContent = fmt(state.saldo);
             document.getElementById('saldoRealTimeValue').style.color = state.saldo >= 0 ? 'green' : 'red';
 
-            if(state.saldo > 0) { alert("🎉 SESSIONE VINCENTE!"); return; }
+            if(state.saldo > 0) { alert(`🎉 VINTO ${fmt(state.saldo)}!`); return; }
             if(state.step < 50) startStep(state.step + 1, hits === 0 ? h.amt + parseFloat(document.getElementById('puntataInput').value) : h.amt);
-        }
-
-        // --- FUNZIONI ARCHIVIO E JSONBIN ---
-        async function save() {
-            if(state.step === 0) return alert("Nulla da salvare");
-            try {
-                const res = await fetch(`${URL}/latest`, { headers: {'X-Access-Key': KEY}});
-                const data = await res.json();
-                let list = Array.isArray(data.record) ? data.record : [];
-                
-                list.push({
-                    dataOra: new Date().toLocaleString('it-IT'),
-                    netto: state.saldo,
-                    investimentoIniziale: parseFloat(document.getElementById('puntataInput').value),
-                    stepChiusura: state.step,
-                    extractedNumbers: [...state.numbers]
-                });
-
-                await fetch(URL, {
-                    method: 'PUT',
-                    headers: {'Content-Type': 'application/json', 'X-Access-Key': KEY},
-                    body: JSON.stringify(list)
-                });
-                alert("Archiviato!"); location.reload();
-            } catch(e) { alert("Errore salvataggio"); }
         }
 
         async function loadArchive() {
             try {
-                const res = await fetch(`${URL}/latest`, { headers: {'X-Access-Key': KEY}});
+                const res = await fetch(`${URL}/latest`, { headers: {'X-ACCESS-KEY': KEY}});
                 const data = await res.json();
                 const list = Array.isArray(data.record) ? data.record : [];
                 const tbody = document.querySelector('#archiveTable tbody');
@@ -261,34 +241,57 @@
                 let totalCassa = 0;
 
                 list.slice().reverse().forEach(i => {
-                    totalCassa += (parseFloat(i.netto) || 0);
+                    const nettoNum = parseFloat(i.netto) || 0;
+                    totalCassa += nettoNum;
                     const r = tbody.insertRow();
                     const [d, t] = i.dataOra.split(' ');
-                    r.innerHTML = `<td>${d}</td><td>${t}</td><td>${fmt(i.netto)}</td><td>${fmt(i.investimentoIniziale)}</td><td>${i.stepChiusura}</td>`;
+                    r.innerHTML = `<td>${d}</td><td>${t}</td><td style="color:${nettoNum>=0?'green':'red'}">${fmt(nettoNum)}</td><td>${fmt(i.investimentoIniziale)}</td><td>${i.stepChiusura}</td>`;
                 });
 
                 const cassaEl = document.getElementById('cassaStoricaValue');
                 cassaEl.textContent = fmt(totalCassa);
-                cassaEl.style.background = totalCassa >= 0 ? 'var(--green-light)' : 'var(--red)';
-            } catch(e) { console.error(e); }
+                cassaEl.style.background = totalCassa >= 0 ? 'var(--green-light)' : '#ffcccc';
+                cassaEl.style.color = 'black';
+            } catch(e) { console.error("Errore archivio:", e); }
+        }
+
+        async function save() {
+            if(state.step === 0) return alert("Inserisci i numeri prima");
+            try {
+                const res = await fetch(`${URL}/latest`, { headers: {'X-ACCESS-KEY': KEY}});
+                const data = await res.json();
+                let list = Array.isArray(data.record) ? data.record : [];
+                list.push({
+                    dataOra: new Date().toLocaleString('it-IT'),
+                    netto: state.saldo,
+                    investimentoIniziale: parseFloat(document.getElementById('puntataInput').value),
+                    stepChiusura: state.step,
+                    extractedNumbers: [...state.numbers]
+                });
+                await fetch(URL, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json', 'X-ACCESS-KEY': KEY},
+                    body: JSON.stringify(list)
+                });
+                alert("Archiviato!"); location.reload();
+            } catch(e) { alert("Errore connessione"); }
         }
 
         async function recall7() {
             try {
-                const res = await fetch(`${URL}/latest`, { headers: {'X-Access-Key': KEY}});
+                const res = await fetch(`${URL}/latest`, { headers: {'X-ACCESS-KEY': KEY}});
                 const data = await res.json();
                 const list = Array.isArray(data.record) ? data.record : [];
-                const last = list.filter(s => s.extractedNumbers).pop();
-                if(!last) return alert("Nessun dato");
+                const last = list.reverse().find(s => s.extractedNumbers && s.extractedNumbers.length > 0);
+                if(!last) return alert("Nessuna sessione trovata");
                 
-                state.numbers = last.extractedNumbers.filter(n => n !== 0).slice(-7);
+                const filtered = last.extractedNumbers.filter(n => n !== 0);
+                state.numbers = filtered.slice(-7);
                 updateNumbersUI();
-                if(state.numbers.length >= 9) calcFactors();
-                alert("Numeri richiamati!");
-            } catch(e) { alert("Errore richiamo"); }
+                alert(`Richiamati ${state.numbers.length} numeri dall'ultima sessione.`);
+            } catch(e) { alert("Errore recupero"); }
         }
 
-        // Events
         document.getElementById('numeroEstratto').addEventListener('keydown', e => { if(e.key==='Enter') handleInput(); });
         document.getElementById('btnArchivia').addEventListener('click', save);
         document.getElementById('btnRecallLast7').addEventListener('click', recall7);
@@ -301,15 +304,15 @@
             document.getElementById('gameView').style.display='block'; 
             document.getElementById('archiveView').style.display='none';
         });
-        document.getElementById('btnResetSession').addEventListener('click', () => location.reload());
+        document.getElementById('btnResetSession').addEventListener('click', () => { if(confirm("Reset?")) location.reload(); });
         document.getElementById('btnResetArchive').addEventListener('click', async () => {
-            if(confirm("Svuoto tutto?")) {
-                await fetch(URL, { method: 'PUT', headers: {'Content-Type': 'application/json', 'X-Access-Key': KEY}, body: JSON.stringify([]) });
+            if(confirm("Sei sicuro?")) {
+                await fetch(URL, { method: 'PUT', headers: {'Content-Type': 'application/json', 'X-ACCESS-KEY': KEY}, body: JSON.stringify([]) });
                 loadArchive();
             }
         });
 
-        window.onload = initTable;
+        window.onload = () => { initTable(); document.getElementById('numeroEstratto').focus(); };
     </script>
 </body>
 </html>
